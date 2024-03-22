@@ -1,0 +1,95 @@
+name: jcm
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  rustfmt-clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Run rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
+
+      - name: Run clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --tests
+
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        target:
+          - debian: null
+            cross: null
+            rust: null
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{matrix.target.rust}}
+      - name: Build (debug)
+        env:
+          GITHUB_ACTIONS_OS: ${{matrix.os}}
+          RUST_TARGET: ${{matrix.target.rust}}
+        run: cargo build --all-features
+      - name: Build (release)
+        env:
+          GITHUB_ACTIONS_OS: ${{matrix.os}}
+          RUST_TARGET: ${{matrix.target.rust}}
+        run: cargo build --all-features --release
+
+  test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        target:
+          - debian: null
+            cross: null
+            rust: null
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{matrix.target.rust}}
+      - name: Run all the tests (debug)
+        env:
+          GITHUB_ACTIONS_OS: ${{matrix.os}}
+          RUST_TARGET: ${{matrix.target.rust}}
+        run: cargo test --all --all-features
+      - name: Run all the tests (release)
+        env:
+          GITHUB_ACTIONS_OS: ${{matrix.os}}
+          RUST_TARGET: ${{matrix.target.rust}}
+        run: cargo test --all --all-features --release
