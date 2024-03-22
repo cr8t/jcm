@@ -150,9 +150,7 @@ mod tests {
             assert_eq!(FailureCode::from_u8(raw), exp);
         }
 
-        for stat in (0..=255u8)
-            .filter(|s| raw_denom.iter().find(|d| d == &s).is_none())
-        {
+        for stat in (0..=255u8).filter(|s| raw_denom.iter().find(|d| d == &s).is_none()) {
             assert!(FailureCode::try_from(stat).is_err());
             assert_eq!(FailureCode::from_u8(stat), FailureCode::Reserved);
         }
