@@ -1,0 +1,6 @@
+[package]
+name = "jcm"
+version = "0.1.0-pre-release"
+edition = "2021"
+
+[dependencies]
