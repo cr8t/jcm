@@ -2,5 +2,11 @@
 name = "jcm"
 version = "0.1.0-pre-release"
 edition = "2021"
+authors = ["JCM Rust Developers"]
+description = "Pure Rust implementation of the JCM USB communication protocol"
+keywords = ["usb", "jcm", "bill-acceptor", "bill-validator"]
+categories = ["finance", "data-structures"]
+repository = "https://github.com/decapod-atm/jcm"
+license = "MIT"
 
 [dependencies]
