@@ -108,7 +108,7 @@ mod tests {
             assert_eq!(BillAcceptorState::from_u8(raw), exp);
         }
 
-        for stat in (0..=255u8).filter(|s| raw_denom.iter().find(|d| d == &s).is_none()) {
+        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
             assert!(BillAcceptorState::try_from(stat).is_err());
             assert_eq!(
                 BillAcceptorState::from_u8(stat),

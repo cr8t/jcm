@@ -218,7 +218,7 @@ mod tests {
             assert_eq!(StatusCode::from_u8(raw), exp);
         }
 
-        for stat in (0..=255u8).filter(|s| raw_denom.iter().find(|d| d == &s).is_none()) {
+        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
             assert!(StatusCode::try_from(stat).is_err());
             assert_eq!(StatusCode::from_u8(stat), StatusCode::Reserved);
         }
