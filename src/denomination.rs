@@ -231,7 +231,7 @@ mod tests {
             assert_eq!(DenominationMxn::from_u8(raw), exp);
         }
 
-        for stat in (0..=255u8).filter(|s| raw_denom.iter().find(|d| d == &s).is_none()) {
+        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
             assert!(DenominationMxn::try_from(stat).is_err());
             assert_eq!(DenominationMxn::from_u8(stat), DenominationMxn::Reserved);
         }
@@ -262,7 +262,7 @@ mod tests {
             assert_eq!(DenominationUsd::try_from(raw), Ok(exp));
         }
 
-        for stat in (0..=255u8).filter(|s| raw_denom.iter().find(|d| d == &s).is_none()) {
+        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
             assert!(DenominationUsd::try_from(stat).is_err());
             assert_eq!(DenominationUsd::from_u8(stat), DenominationUsd::Reserved);
         }

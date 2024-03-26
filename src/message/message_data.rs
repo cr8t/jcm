@@ -280,7 +280,7 @@ mod tests {
             0x00,
             // func ID
             0x00,
-        ].into_iter().chain([0xff; MAX_LEN].into_iter()).collect();
+        ].into_iter().chain([0xff; MAX_LEN]).collect();
 
         assert!(MessageData::try_from(raw.as_ref()).is_err());
 
