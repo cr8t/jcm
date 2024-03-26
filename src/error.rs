@@ -18,6 +18,8 @@ pub enum Error {
     InvalidMessageType(u8),
     InvalidMessageLen((usize, usize)),
     InvalidMessageDataLen((usize, usize)),
+    InvalidFunctionMode(u8),
+    InvalidMajorMinorStatus(u16),
 }
 
 impl fmt::Display for Error {
@@ -41,6 +43,12 @@ impl fmt::Display for Error {
                 f,
                 "invalid message data length, have: {have}, expected: {exp}"
             ),
+            Self::InvalidFunctionMode(err) => {
+                write!(f, "invalid device status function mode: {err}")
+            }
+            Self::InvalidMajorMinorStatus(err) => {
+                write!(f, "invalid device status major-minor status: {err}")
+            }
         }
     }
 }
