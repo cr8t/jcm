@@ -3,13 +3,11 @@ use std::{fmt, mem};
 use crate::{Error, Result};
 
 mod conf_id;
-mod func_id;
 mod message_data;
 mod message_id;
 mod message_type;
 
 pub use conf_id::*;
-pub use func_id::*;
 pub use message_data::*;
 pub use message_id::*;
 pub use message_type::*;
@@ -141,11 +139,11 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_message() -> Result<()> {
-        let raw: [u8; 7] = [
+        let raw: [u8; 8] = [
             // message ID
             0x12,
             // length
-            0x00, 0x04,
+            0x00, 0x05,
             // message data
             //     conf ID
             0x10,
@@ -153,8 +151,8 @@ mod tests {
             0x00,
             //     message type
             0x00,
-            //     func ID
-            0x00,
+            //     func ID + request/event code
+            0x00, 0x00,
             //     additional data (none)
         ];
 
@@ -169,11 +167,11 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_message_with_data() -> Result<()> {
-        let raw: [u8; 15] = [
+        let raw: [u8; 16] = [
             // message ID
             0x12,
             // length
-            0x00, 0x0c,
+            0x00, 0x0d,
             // message data
             //     conf ID
             0x10,
@@ -181,13 +179,13 @@ mod tests {
             0x00,
             //     message type
             0x00,
-            //     func ID
-            0x00,
+            //     func ID + request/event code
+            0x00, 0x00,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
 
-        let exp = Message::new().with_data(MessageData::new().with_additional(&raw[7..]));
+        let exp = Message::new().with_data(MessageData::new().with_additional(&raw[8..]));
         let msg = Message::try_from(raw.as_ref())?;
 
         assert_eq!(msg, exp);
@@ -198,7 +196,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_message_with_invalid_data() -> Result<()> {
-        let raw: [u8; 15] = [
+        let raw: [u8; 16] = [
             // message ID
             0x12,
             // length - longer than the raw message buffer
@@ -210,8 +208,8 @@ mod tests {
             0x00,
             //     message type
             0x00,
-            //     func ID
-            0x00,
+            //     func ID + request/event code
+            0x00, 0x00,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];

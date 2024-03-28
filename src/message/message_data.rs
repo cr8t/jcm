@@ -1,7 +1,9 @@
 use std::{cmp, fmt, mem};
 
-use super::{ConfId, FuncId, MessageType, MAX_LEN};
-use crate::{Error, Result};
+use super::{ConfId, MessageType, MAX_LEN};
+use crate::{Error, FuncId, Result};
+
+const MAX_DATA_LEN: usize = MAX_LEN - MessageData::meta_len();
 
 /// Represents message data for JCM host-device communication.
 #[repr(C)]
@@ -10,7 +12,9 @@ pub struct MessageData {
     conf_id: ConfId,
     uid: u8,
     message_type: MessageType,
+    // FIXME: merge `func_id` and `code` into MessageCode type
     func_id: FuncId,
+    code: u8,
     additional: Vec<u8>,
 }
 
@@ -22,6 +26,7 @@ impl MessageData {
             uid: 0,
             message_type: MessageType::new(),
             func_id: FuncId::new(),
+            code: 0,
             additional: Vec::new(),
         }
     }
@@ -100,7 +105,7 @@ impl MessageData {
 
     /// Sets the additional data of the [MessageData].
     pub fn set_additional(&mut self, additional: &[u8]) {
-        let len = cmp::min(additional.len(), MAX_LEN);
+        let len = cmp::min(additional.len(), MAX_DATA_LEN);
         self.additional = additional[..len].into()
     }
 
@@ -116,7 +121,11 @@ impl MessageData {
     }
 
     pub(crate) const fn meta_len() -> usize {
-        ConfId::len() + mem::size_of::<u8>() + MessageType::len() + FuncId::len()
+        ConfId::len()
+            + mem::size_of::<u8>()
+            + MessageType::len()
+            + FuncId::len()
+            + mem::size_of::<u8>()
     }
 
     /// Gets whether the [MessageData] is empty.
@@ -132,6 +141,7 @@ impl From<&MessageData> for Vec<u8> {
             val.uid,
             val.message_type.into(),
             val.func_id as u8,
+            val.code,
         ]
         .into_iter()
         .chain(val.additional.iter().cloned())
@@ -146,6 +156,7 @@ impl From<MessageData> for Vec<u8> {
             val.uid,
             val.message_type.into(),
             val.func_id as u8,
+            val.code,
         ]
         .into_iter()
         .chain(val.additional)
@@ -169,13 +180,15 @@ impl TryFrom<&[u8]> for MessageData {
             let uid = val[1];
             let message_type = MessageType::try_from(val[2])?;
             let func_id = FuncId::try_from(val[3])?;
-            let additional = val[4..].into();
+            let code = val[4];
+            let additional = val[5..].into();
 
             Ok(Self {
                 conf_id,
                 uid,
                 message_type,
                 func_id,
+                code,
                 additional,
             })
         }
@@ -207,15 +220,15 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_message_data() -> Result<()> {
-        let raw: [u8; 4] = [
+        let raw: [u8; 5] = [
             // conf ID
             0x10,
             // UID
             0x00,
             // message type
             0x00,
-            // func ID
-            0x00,
+            // func ID + request/event code
+            0x00, 0x00,
             // additional data (none)
         ];
 
@@ -230,20 +243,20 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_message_data_with_additional() -> Result<()> {
-        let raw: [u8; 12] = [
+        let raw: [u8; 13] = [
             // conf ID
             0x10,
             // UID
             0x00,
             // message type
             0x00,
-            // func ID
-            0x00,
+            // func ID + request/event code
+            0x00, 0x00,
             // additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
 
-        let exp = MessageData::new().with_additional(&raw[4..]);
+        let exp = MessageData::new().with_additional(&raw[5..]);
         let msg = MessageData::try_from(raw.as_ref())?;
 
         assert_eq!(msg, exp);
@@ -278,8 +291,8 @@ mod tests {
             0x00,
             // message type
             0x00,
-            // func ID
-            0x00,
+            // func ID + request/event code
+            0x00, 0x00,
         ].into_iter().chain([0xff; MAX_LEN]).collect();
 
         assert!(MessageData::try_from(raw.as_ref()).is_err());
