@@ -21,6 +21,7 @@ pub enum Error {
     InvalidFunctionMode(u8),
     InvalidMajorMinorStatus(u16),
     InvalidDeviceStatus(u16),
+    InvalidRequestCode(u16),
 }
 
 impl fmt::Display for Error {
@@ -53,6 +54,7 @@ impl fmt::Display for Error {
             Self::InvalidDeviceStatus(err) => {
                 write!(f, "invalid device status: {err}")
             }
+            Self::InvalidRequestCode(err) => write!(f, "invalid request code: {err}"),
         }
     }
 }

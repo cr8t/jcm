@@ -3,11 +3,13 @@ use std::{fmt, mem};
 use crate::{Error, Result};
 
 mod conf_id;
+mod message_code;
 mod message_data;
 mod message_id;
 mod message_type;
 
 pub use conf_id::*;
+pub use message_code::*;
 pub use message_data::*;
 pub use message_id::*;
 pub use message_type::*;

@@ -112,8 +112,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_function_mode() {
-        let raw_denom = [COMMON, ACCEPTOR, RECYCLER, ESCROW];
+    fn test_func_id() {
+        let raw_vals = [COMMON, ACCEPTOR, RECYCLER, ESCROW];
         let expected = [
             FuncId::Common,
             FuncId::Acceptor,
@@ -121,14 +121,14 @@ mod tests {
             FuncId::Escrow,
         ];
 
-        for (raw, exp) in raw_denom.into_iter().zip(expected.into_iter()) {
+        for (raw, exp) in raw_vals.into_iter().zip(expected.into_iter()) {
             assert_eq!(FuncId::try_from(raw), Ok(exp));
             assert_eq!(FuncId::from_u8(raw), exp);
         }
 
-        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
-            assert!(FuncId::try_from(stat).is_err());
-            assert_eq!(FuncId::from_u8(stat), FuncId::Reserved);
+        for val in (0..=255u8).filter(|s| !raw_vals.iter().any(|d| d == s)) {
+            assert!(FuncId::try_from(val).is_err());
+            assert_eq!(FuncId::from_u8(val), FuncId::Reserved);
         }
     }
 }
