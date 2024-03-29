@@ -1,11 +1,11 @@
-use crate::{Error, Result};
+use crate::{Error, FuncId, Result};
 
-mod function_mode;
 mod major_minor_status;
 #[cfg(test)]
 mod tests;
 
-pub use function_mode::*;
+/// Convenience alias for [FuncId] for consistency with the specification.
+pub type FunctionMode = FuncId;
 pub use major_minor_status::*;
 
 /// Represents the JCM device status.
