@@ -1,7 +1,7 @@
 use std::{cmp, fmt, mem};
 
-use super::{ConfId, MessageType, MAX_LEN};
-use crate::{Error, FuncId, Result};
+use super::{ConfId, MessageCode, MessageType, RawMessageCode, MAX_LEN};
+use crate::{Error, Result};
 
 const MAX_DATA_LEN: usize = MAX_LEN - MessageData::meta_len();
 
@@ -12,9 +12,7 @@ pub struct MessageData {
     conf_id: ConfId,
     uid: u8,
     message_type: MessageType,
-    // FIXME: merge `func_id` and `code` into MessageCode type
-    func_id: FuncId,
-    code: u8,
+    message_code: MessageCode,
     additional: Vec<u8>,
 }
 
@@ -25,8 +23,7 @@ impl MessageData {
             conf_id: ConfId::new(),
             uid: 0,
             message_type: MessageType::new(),
-            func_id: FuncId::new(),
-            code: 0,
+            message_code: MessageCode::new(),
             additional: Vec::new(),
         }
     }
@@ -82,19 +79,19 @@ impl MessageData {
         self
     }
 
-    /// Gets the [FuncId] of the [MessageData].
-    pub const fn func_id(&self) -> FuncId {
-        self.func_id
+    /// Gets the [MessageCode] of the [MessageData].
+    pub const fn message_code(&self) -> MessageCode {
+        self.message_code
     }
 
-    /// Sets the [FuncId] of the [MessageData].
-    pub fn set_func_id(&mut self, val: FuncId) {
-        self.func_id = val;
+    /// Sets the [MessageCode] of the [MessageData].
+    pub fn set_message_code(&mut self, val: MessageCode) {
+        self.message_code = val;
     }
 
-    /// Builder function that sets the [FuncId] of the [MessageData].
-    pub fn with_func_id(mut self, val: FuncId) -> Self {
-        self.set_func_id(val);
+    /// Builder function that sets the [MessageCode] of the [MessageData].
+    pub fn with_message_code(mut self, val: MessageCode) -> Self {
+        self.set_message_code(val);
         self
     }
 
@@ -121,27 +118,28 @@ impl MessageData {
     }
 
     pub(crate) const fn meta_len() -> usize {
-        ConfId::len()
-            + mem::size_of::<u8>()
-            + MessageType::len()
-            + FuncId::len()
-            + mem::size_of::<u8>()
+        ConfId::len() + mem::size_of::<u8>() + MessageType::len() + MessageCode::len()
     }
 
     /// Gets whether the [MessageData] is empty.
     pub fn is_empty(&self) -> bool {
-        self.additional.is_empty()
+        self.conf_id.is_empty()
+            || self.message_type.is_empty()
+            || self.message_code.is_empty()
+            || self.message_code.func_id().is_empty()
+            || self.additional.is_empty()
     }
 }
 
 impl From<&MessageData> for Vec<u8> {
     fn from(val: &MessageData) -> Self {
+        let code = val.message_code.to_bytes();
         [
             val.conf_id as u8,
             val.uid,
             val.message_type.into(),
-            val.func_id as u8,
-            val.code,
+            code[0],
+            code[1],
         ]
         .into_iter()
         .chain(val.additional.iter().cloned())
@@ -151,12 +149,13 @@ impl From<&MessageData> for Vec<u8> {
 
 impl From<MessageData> for Vec<u8> {
     fn from(val: MessageData) -> Self {
+        let code = val.message_code.to_bytes();
         [
             val.conf_id as u8,
             val.uid,
             val.message_type.into(),
-            val.func_id as u8,
-            val.code,
+            code[0],
+            code[1],
         ]
         .into_iter()
         .chain(val.additional)
@@ -179,16 +178,17 @@ impl TryFrom<&[u8]> for MessageData {
             let conf_id = ConfId::try_from(val[0])?;
             let uid = val[1];
             let message_type = MessageType::try_from(val[2])?;
-            let func_id = FuncId::try_from(val[3])?;
-            let code = val[4];
+            let message_code = MessageCode::try_from(RawMessageCode::create(
+                message_type,
+                u16::from_be_bytes([val[3], val[4]]),
+            ))?;
             let additional = val[5..].into();
 
             Ok(Self {
                 conf_id,
                 uid,
                 message_type,
-                func_id,
-                code,
+                message_code,
                 additional,
             })
         }
@@ -201,7 +201,7 @@ impl fmt::Display for MessageData {
         write!(f, r#""conf_id": {},"#, self.conf_id)?;
         write!(f, r#""uid": {},"#, self.uid)?;
         write!(f, r#""message_type": {},"#, self.message_type)?;
-        write!(f, r#""func_id": {},"#, self.func_id)?;
+        write!(f, r#""message_code": {},"#, self.message_code)?;
         write!(f, r#""additional": ["#)?;
         for (i, d) in self.additional.iter().enumerate() {
             if i != 0 {
@@ -228,7 +228,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
             // additional data (none)
         ];
 
@@ -251,7 +251,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
             // additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
@@ -292,7 +292,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
         ].into_iter().chain([0xff; MAX_LEN]).collect();
 
         assert!(MessageData::try_from(raw.as_ref()).is_err());

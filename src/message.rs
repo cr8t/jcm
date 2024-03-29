@@ -154,7 +154,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
             //     additional data (none)
         ];
 
@@ -182,7 +182,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
@@ -211,7 +211,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x00,
+            0x00, 0x01,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
