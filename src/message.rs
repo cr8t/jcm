@@ -78,14 +78,35 @@ impl Message {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
+
+    /// Writes the [Message] to the provided byte buffer.
+    pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
+        let len = self.len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidMessageLen((buf_len, len)))
+        } else {
+            let meta_len = Self::meta_len();
+            let msg_iter = [self.id.into()]
+                .into_iter()
+                .chain((self.data.len() as u16).to_be_bytes());
+
+            buf.iter_mut()
+                .take(meta_len)
+                .zip(msg_iter)
+                .for_each(|(dst, src)| *dst = src);
+
+            self.data.to_bytes(&mut buf[meta_len..])
+        }
+    }
 }
 
 impl From<&Message> for Vec<u8> {
     fn from(val: &Message) -> Self {
-        let len = (val.data.len() as u16).to_be_bytes();
-
-        [val.id as u8, len[0], len[1]]
+        [val.id.into()]
             .into_iter()
+            .chain((val.data.len() as u16).to_be_bytes())
             .chain(Vec::<u8>::from(val.data()))
             .collect()
     }
@@ -93,10 +114,9 @@ impl From<&Message> for Vec<u8> {
 
 impl From<Message> for Vec<u8> {
     fn from(val: Message) -> Self {
-        let len = (val.data.len() as u16).to_be_bytes();
-
-        [val.id as u8, len[0], len[1]]
+        [val.id.into()]
             .into_iter()
+            .chain((val.data.len() as u16).to_be_bytes())
             .chain(Vec::<u8>::from(val.data))
             .collect()
     }
