@@ -7,12 +7,14 @@ mod message_code;
 mod message_data;
 mod message_id;
 mod message_type;
+mod response_code;
 
 pub use conf_id::*;
 pub use message_code::*;
 pub use message_data::*;
 pub use message_id::*;
 pub use message_type::*;
+pub use response_code::*;
 
 /// Maximum length of the [Message].
 pub const MAX_LEN: usize = u16::MAX as usize;

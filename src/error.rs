@@ -24,6 +24,7 @@ pub enum Error {
     InvalidRequestCode(u16),
     InvalidEventCode(u16),
     InvalidMessageCode((u8, u16)),
+    InvalidResponseCode(u8),
 }
 
 impl fmt::Display for Error {
@@ -62,6 +63,7 @@ impl fmt::Display for Error {
                 f,
                 r#"invalid message code: {{"message_type": {ty}, "code": {code}}}"#
             ),
+            Self::InvalidResponseCode(err) => write!(f, "invalid response code: {err}"),
         }
     }
 }
