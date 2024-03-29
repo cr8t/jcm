@@ -23,6 +23,7 @@ pub enum Error {
     InvalidDeviceStatus(u16),
     InvalidRequestCode(u16),
     InvalidEventCode(u16),
+    InvalidMessageCode((u8, u16)),
 }
 
 impl fmt::Display for Error {
@@ -57,6 +58,10 @@ impl fmt::Display for Error {
             }
             Self::InvalidRequestCode(err) => write!(f, "invalid request code: {err}"),
             Self::InvalidEventCode(err) => write!(f, "invalid event code: {err}"),
+            Self::InvalidMessageCode((ty, code)) => write!(
+                f,
+                r#"invalid message code: {{"message_type": {ty}, "code": {code}}}"#
+            ),
         }
     }
 }
