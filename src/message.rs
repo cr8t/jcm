@@ -90,7 +90,7 @@ impl Message {
             let meta_len = Self::meta_len();
             let msg_iter = [self.id.into()]
                 .into_iter()
-                .chain((self.data.len() as u16).to_be_bytes());
+                .chain((self.data.len() as u16).to_le_bytes());
 
             buf.iter_mut()
                 .take(meta_len)
@@ -132,7 +132,7 @@ impl TryFrom<&[u8]> for Message {
         } else {
             let id = MessageId::try_from(val[0])?;
 
-            let data_len = u16::from_be_bytes([val[1], val[2]]) as usize;
+            let data_len = u16::from_le_bytes([val[1], val[2]]) as usize;
             if data_len > len {
                 Err(Error::InvalidMessageDataLen((
                     data_len,
@@ -167,7 +167,7 @@ mod tests {
             // message ID
             0x12,
             // length
-            0x00, 0x05,
+            0x05, 0x00,
             // message data
             //     conf ID
             0x10,
@@ -176,7 +176,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             //     additional data (none)
         ];
 
@@ -195,7 +195,7 @@ mod tests {
             // message ID
             0x12,
             // length
-            0x00, 0x0d,
+            0x0d, 0x00,
             // message data
             //     conf ID
             0x10,
@@ -204,7 +204,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
@@ -224,7 +224,7 @@ mod tests {
             // message ID
             0x12,
             // length - longer than the raw message buffer
-            0x00, 0xff,
+            0xff, 0x00,
             // message data
             //     conf ID
             0x10,
@@ -233,7 +233,7 @@ mod tests {
             //     message type
             0x00,
             //     func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             //     additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];

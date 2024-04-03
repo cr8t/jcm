@@ -190,7 +190,7 @@ impl TryFrom<&[u8]> for MessageData {
             let message_type = MessageType::try_from(val[2])?;
             let message_code = MessageCode::try_from(RawMessageCode::create(
                 message_type,
-                u16::from_be_bytes([val[3], val[4]]),
+                u16::from_le_bytes([val[3], val[4]]),
             ))?;
             let additional = val[5..].into();
 
@@ -238,7 +238,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             // additional data (none)
         ];
 
@@ -261,7 +261,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             // additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
@@ -302,7 +302,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
         ].into_iter().chain([0xff; MAX_LEN]).collect();
 
         assert!(MessageData::try_from(raw.as_ref()).is_err());

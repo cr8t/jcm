@@ -70,7 +70,7 @@ impl MessageCode {
 
     /// Converts the [MessageCode] to raw byte array.
     pub fn to_bytes(&self) -> [u8; 2] {
-        u16::from(self).to_be_bytes()
+        u16::from(self).to_le_bytes()
     }
 
     /// Gets the length of the [MessageCode].
