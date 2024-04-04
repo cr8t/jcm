@@ -129,37 +129,47 @@ impl MessageData {
             || self.message_code.func_id().is_empty()
             || self.additional.is_empty()
     }
+
+    /// Writes the [MessageData] to the provided byte buffer.
+    pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
+        let len = self.len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidMessageDataLen((buf_len, len)))
+        } else {
+            buf.iter_mut()
+                .take(len)
+                .zip(
+                    [self.conf_id.into(), self.uid, self.message_type.into()]
+                        .into_iter()
+                        .chain(self.message_code.to_bytes())
+                        .chain(self.additional.iter().cloned()),
+                )
+                .for_each(|(dst, src)| *dst = src);
+
+            Ok(())
+        }
+    }
 }
 
 impl From<&MessageData> for Vec<u8> {
     fn from(val: &MessageData) -> Self {
-        let code = val.message_code.to_bytes();
-        [
-            val.conf_id as u8,
-            val.uid,
-            val.message_type.into(),
-            code[0],
-            code[1],
-        ]
-        .into_iter()
-        .chain(val.additional.iter().cloned())
-        .collect()
+        [val.conf_id.into(), val.uid, val.message_type.into()]
+            .into_iter()
+            .chain(val.message_code.to_bytes())
+            .chain(val.additional.iter().cloned())
+            .collect()
     }
 }
 
 impl From<MessageData> for Vec<u8> {
     fn from(val: MessageData) -> Self {
-        let code = val.message_code.to_bytes();
-        [
-            val.conf_id as u8,
-            val.uid,
-            val.message_type.into(),
-            code[0],
-            code[1],
-        ]
-        .into_iter()
-        .chain(val.additional)
-        .collect()
+        [val.conf_id.into(), val.uid, val.message_type.into()]
+            .into_iter()
+            .chain(val.message_code.to_bytes())
+            .chain(val.additional)
+            .collect()
     }
 }
 
@@ -180,7 +190,7 @@ impl TryFrom<&[u8]> for MessageData {
             let message_type = MessageType::try_from(val[2])?;
             let message_code = MessageCode::try_from(RawMessageCode::create(
                 message_type,
-                u16::from_be_bytes([val[3], val[4]]),
+                u16::from_le_bytes([val[3], val[4]]),
             ))?;
             let additional = val[5..].into();
 
@@ -228,7 +238,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             // additional data (none)
         ];
 
@@ -251,7 +261,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
             // additional data
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         ];
@@ -292,7 +302,7 @@ mod tests {
             // message type
             0x00,
             // func ID + request/event code
-            0x00, 0x01,
+            0x01, 0x00,
         ].into_iter().chain([0xff; MAX_LEN]).collect();
 
         assert!(MessageData::try_from(raw.as_ref()).is_err());

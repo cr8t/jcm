@@ -58,6 +58,18 @@ impl Default for ConfId {
     }
 }
 
+impl From<ConfId> for u8 {
+    fn from(val: ConfId) -> Self {
+        val as Self
+    }
+}
+
+impl From<&ConfId> for u8 {
+    fn from(val: &ConfId) -> Self {
+        (*val).into()
+    }
+}
+
 impl TryFrom<u8> for ConfId {
     type Error = Error;
 

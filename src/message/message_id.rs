@@ -44,6 +44,18 @@ impl Default for MessageId {
     }
 }
 
+impl From<MessageId> for u8 {
+    fn from(val: MessageId) -> Self {
+        val as Self
+    }
+}
+
+impl From<&MessageId> for u8 {
+    fn from(val: &MessageId) -> Self {
+        (*val).into()
+    }
+}
+
 impl TryFrom<u8> for MessageId {
     type Error = Error;
 
