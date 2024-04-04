@@ -25,6 +25,7 @@ pub enum Error {
     InvalidEventCode(u16),
     InvalidMessageCode((u8, u16)),
     InvalidResponseCode(u8),
+    InvalidResponseLen((usize, usize)),
 }
 
 impl fmt::Display for Error {
@@ -64,6 +65,9 @@ impl fmt::Display for Error {
                 r#"invalid message code: {{"message_type": {ty}, "code": {code}}}"#
             ),
             Self::InvalidResponseCode(err) => write!(f, "invalid response code: {err}"),
+            Self::InvalidResponseLen((have, exp)) => {
+                write!(f, "invalid response length, have: {have}, expected: {exp}")
+            }
         }
     }
 }

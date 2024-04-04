@@ -141,14 +141,10 @@ impl MessageData {
             buf.iter_mut()
                 .take(len)
                 .zip(
-                    [
-                        self.conf_id.into(),
-                        self.uid,
-                        self.message_type.into(),
-                    ]
-                    .into_iter()
-                    .chain(self.message_code.to_bytes())
-                    .chain(self.additional.iter().cloned()),
+                    [self.conf_id.into(), self.uid, self.message_type.into()]
+                        .into_iter()
+                        .chain(self.message_code.to_bytes())
+                        .chain(self.additional.iter().cloned()),
                 )
                 .for_each(|(dst, src)| *dst = src);
 
