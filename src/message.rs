@@ -90,7 +90,7 @@ impl Message {
             let meta_len = Self::meta_len();
             let msg_iter = [self.id.into()]
                 .into_iter()
-                .chain((self.data.len() as u16).to_le_bytes());
+                .chain((len as u16).to_le_bytes());
 
             buf.iter_mut()
                 .take(meta_len)
@@ -139,7 +139,7 @@ impl TryFrom<&[u8]> for Message {
                     len - Self::meta_len(),
                 )))
             } else {
-                let data = MessageData::try_from(&val[3..(3 + data_len)])?;
+                let data = MessageData::try_from(&val[3..data_len])?;
 
                 Ok(Self { id, data })
             }
@@ -167,7 +167,7 @@ mod tests {
             // message ID
             0x12,
             // length
-            0x05, 0x00,
+            0x08, 0x00,
             // message data
             //     conf ID
             0x10,
@@ -195,7 +195,7 @@ mod tests {
             // message ID
             0x12,
             // length
-            0x0d, 0x00,
+            0x10, 0x00,
             // message data
             //     conf ID
             0x10,
