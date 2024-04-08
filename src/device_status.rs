@@ -49,7 +49,7 @@ impl DeviceStatus {
         self
     }
 
-    /// Gets the [MajorMinorStaus] of the [DeviceStatus].
+    /// Gets the [MajorMinorStatus] of the [DeviceStatus].
     pub const fn major_minor_status(&self) -> MajorMinorStatus {
         self.major_minor_status
     }
