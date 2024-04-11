@@ -3,8 +3,10 @@ use std::fmt;
 use crate::{Error, Message, Result};
 
 mod response_code;
+mod uid_response;
 
 pub use response_code::*;
+pub use uid_response::*;
 
 /// Represents the generic response format for JCM host-device communication.
 ///
