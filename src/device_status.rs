@@ -1,3 +1,5 @@
+use std::{fmt, mem};
+
 use crate::{Error, FuncId, Result};
 
 mod major_minor_status;
@@ -65,12 +67,27 @@ impl DeviceStatus {
         self
     }
 
-    /// Infallible conversion from a [`u16`] into a [MajorMinorStatus].
+    /// Infallible conversion from a [`u16`] into a [DeviceStatus].
     pub const fn from_u16(val: u16) -> Self {
         Self {
             function_mode: FunctionMode::from_u16(val),
             major_minor_status: MajorMinorStatus::from_u16(val),
         }
+    }
+
+    /// Converts the [DeviceStatus] into a byte array.
+    pub fn to_bytes(&self) -> [u8; 2] {
+        u16::from(self).to_le_bytes()
+    }
+
+    /// Gets the length of the [DeviceStatus].
+    pub const fn len() -> usize {
+        mem::size_of::<u16>()
+    }
+
+    /// Gets whether the [DeviceStatus] is empty.
+    pub const fn is_empty(&self) -> bool {
+        self.function_mode.is_empty() && self.major_minor_status.is_empty()
     }
 
     /// Gets whether the [DeviceStatus] has a valid combination of [FunctionMode] and
@@ -158,5 +175,37 @@ impl TryFrom<u16> for DeviceStatus {
         } else {
             Err(Error::InvalidDeviceStatus(val))
         }
+    }
+}
+
+impl TryFrom<[u8; 2]> for DeviceStatus {
+    type Error = Error;
+
+    fn try_from(val: [u8; 2]) -> Result<Self> {
+        u16::from_le_bytes(val).try_into()
+    }
+}
+
+impl TryFrom<&[u8]> for DeviceStatus {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self> {
+        let len = Self::len();
+        let val_len = val.len();
+
+        if val_len < len {
+            Err(Error::InvalidDeviceStatusLen((val_len, len)))
+        } else {
+            [val[0], val[1]].try_into()
+        }
+    }
+}
+
+impl fmt::Display for DeviceStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        write!(f, r#""function_mode": {}, "#, self.function_mode)?;
+        write!(f, r#""major_minor_status": {}"#, self.major_minor_status)?;
+        write!(f, "}}")
     }
 }
