@@ -156,8 +156,24 @@ impl UnitStatusList {
         self.0
     }
 
+    /// Writes the [UnitStatusList] to a byte buffer.
+    pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
+        let len = self.len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidUnitStatusListLen((buf_len, len)))
+        } else {
+            buf.iter_mut()
+                .zip(self.0.iter().flat_map(|c| c.to_bytes()))
+                .for_each(|(dst, src)| *dst = src);
+
+            Ok(())
+        }
+    }
+
     /// Converts the [UnitStatusList] into a byte vector.
-    pub fn to_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         self.0.iter().flat_map(|c| c.to_bytes()).collect()
     }
 

@@ -100,15 +100,21 @@ impl StatusResponse {
         match buf_len {
             bl if bl < len => Err(Error::InvalidResponseLen((buf_len, len))),
             _ => {
+                let unit_len = self.unit_status.len();
+                let main_len = len - unit_len;
+
                 buf.iter_mut()
-                    .take(len)
+                    .take(main_len)
                     .zip(
                         [self.code.into(), len as u8]
                             .into_iter()
-                            .chain(self.status.to_bytes())
-                            .chain(self.unit_status.to_bytes()),
+                            .chain(self.status.to_bytes()),
                     )
                     .for_each(|(dst, src)| *dst = src);
+
+                if unit_len > 0 {
+                    self.unit_status.to_bytes(buf[main_len..].as_mut())?;
+                }
 
                 Ok(())
             }
@@ -193,7 +199,7 @@ impl From<&StatusResponse> for Response {
             additional: [val.len() as u8]
                 .into_iter()
                 .chain(val.status.to_bytes())
-                .chain(val.unit_status.to_bytes())
+                .chain(val.unit_status.as_bytes())
                 .collect(),
         }
     }
