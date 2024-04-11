@@ -29,6 +29,8 @@ pub enum Error {
     InvalidResponseLen((usize, usize)),
     InvalidUnitNumber(u8),
     InvalidFunctionStatus(u8),
+    InvalidUnitStatusLen((usize, usize)),
+    InvalidUnitStatusListLen((usize, usize)),
 }
 
 impl fmt::Display for Error {
@@ -80,6 +82,18 @@ impl fmt::Display for Error {
             Self::InvalidUnitNumber(err) => write!(f, "invalid unit number: {err:#x}"),
             Self::InvalidFunctionStatus(err) => {
                 write!(f, "invalid function status: {err:#x}")
+            }
+            Self::InvalidUnitStatusLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid unit status length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidUnitStatusListLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid unit status list length, have: {have}, expected a multiple of: {exp}"
+                )
             }
         }
     }

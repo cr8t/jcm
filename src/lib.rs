@@ -8,6 +8,7 @@ mod function_status;
 mod message;
 mod status_code;
 mod unit_number;
+mod unit_status;
 
 pub use bill_acceptor_state::*;
 pub use denomination::*;
@@ -19,3 +20,4 @@ pub use function_status::*;
 pub use message::*;
 pub use status_code::*;
 pub use unit_number::*;
+pub use unit_status::*;
