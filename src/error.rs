@@ -28,6 +28,7 @@ pub enum Error {
     InvalidResponseCode(u8),
     InvalidResponseLen((usize, usize)),
     InvalidUnitNumber(u8),
+    InvalidFunctionStatus(u8),
 }
 
 impl fmt::Display for Error {
@@ -77,6 +78,9 @@ impl fmt::Display for Error {
                 write!(f, "invalid response length, have: {have}, expected: {exp}")
             }
             Self::InvalidUnitNumber(err) => write!(f, "invalid unit number: {err:#x}"),
+            Self::InvalidFunctionStatus(err) => {
+                write!(f, "invalid function status: {err:#x}")
+            }
         }
     }
 }
