@@ -20,12 +20,17 @@ pub enum Error {
     InvalidMessageDataLen((usize, usize)),
     InvalidFunctionMode(u8),
     InvalidMajorMinorStatus(u16),
+    InvalidDeviceStatusLen((usize, usize)),
     InvalidDeviceStatus(u16),
     InvalidRequestCode(u16),
     InvalidEventCode(u16),
     InvalidMessageCode((u8, u16)),
     InvalidResponseCode(u8),
     InvalidResponseLen((usize, usize)),
+    InvalidUnitNumber(u8),
+    InvalidFunctionStatus(u8),
+    InvalidUnitStatusLen((usize, usize)),
+    InvalidUnitStatusListLen((usize, usize)),
 }
 
 impl fmt::Display for Error {
@@ -58,6 +63,12 @@ impl fmt::Display for Error {
             Self::InvalidDeviceStatus(err) => {
                 write!(f, "invalid device status: {err}")
             }
+            Self::InvalidDeviceStatusLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid device status length, have: {have}, expected: {exp}"
+                )
+            }
             Self::InvalidRequestCode(err) => write!(f, "invalid request code: {err}"),
             Self::InvalidEventCode(err) => write!(f, "invalid event code: {err}"),
             Self::InvalidMessageCode((ty, code)) => write!(
@@ -67,6 +78,22 @@ impl fmt::Display for Error {
             Self::InvalidResponseCode(err) => write!(f, "invalid response code: {err}"),
             Self::InvalidResponseLen((have, exp)) => {
                 write!(f, "invalid response length, have: {have}, expected: {exp}")
+            }
+            Self::InvalidUnitNumber(err) => write!(f, "invalid unit number: {err:#x}"),
+            Self::InvalidFunctionStatus(err) => {
+                write!(f, "invalid function status: {err:#x}")
+            }
+            Self::InvalidUnitStatusLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid unit status length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidUnitStatusListLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid unit status list length, have: {have}, expected a multiple of: {exp}"
+                )
             }
         }
     }

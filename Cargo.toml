@@ -10,3 +10,4 @@ repository = "https://github.com/decapod-atm/jcm"
 license = "MIT"
 
 [dependencies]
+log = "0.4"
