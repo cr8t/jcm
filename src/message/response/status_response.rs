@@ -192,8 +192,8 @@ impl From<&StatusResponse> for Response {
             code: val.code,
             additional: [val.len() as u8]
                 .into_iter()
-                .chain(val.status.to_bytes().into_iter())
-                .chain(val.unit_status.to_bytes().into_iter())
+                .chain(val.status.to_bytes())
+                .chain(val.unit_status.to_bytes())
                 .collect(),
         }
     }

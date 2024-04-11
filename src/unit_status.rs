@@ -158,16 +158,12 @@ impl UnitStatusList {
 
     /// Converts the [UnitStatusList] into a byte vector.
     pub fn to_bytes(&self) -> Vec<u8> {
-        self.0.iter().map(|c| c.to_bytes()).flatten().collect()
+        self.0.iter().flat_map(|c| c.to_bytes()).collect()
     }
 
     /// Converts the [UnitStatusList] into a byte vector.
     pub fn into_bytes(self) -> Vec<u8> {
-        self.0
-            .into_iter()
-            .map(|c| c.into_bytes())
-            .flatten()
-            .collect()
+        self.0.into_iter().flat_map(|c| c.into_bytes()).collect()
     }
 
     /// Gets the byte length of the [UnitStatusList].
