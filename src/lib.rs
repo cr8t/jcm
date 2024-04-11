@@ -6,6 +6,7 @@ mod failure_code;
 mod func_id;
 mod message;
 mod status_code;
+mod unit_number;
 
 pub use bill_acceptor_state::*;
 pub use denomination::*;
@@ -15,3 +16,4 @@ pub use failure_code::*;
 pub use func_id::*;
 pub use message::*;
 pub use status_code::*;
+pub use unit_number::*;

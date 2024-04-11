@@ -20,12 +20,14 @@ pub enum Error {
     InvalidMessageDataLen((usize, usize)),
     InvalidFunctionMode(u8),
     InvalidMajorMinorStatus(u16),
+    InvalidDeviceStatusLen((usize, usize)),
     InvalidDeviceStatus(u16),
     InvalidRequestCode(u16),
     InvalidEventCode(u16),
     InvalidMessageCode((u8, u16)),
     InvalidResponseCode(u8),
     InvalidResponseLen((usize, usize)),
+    InvalidUnitNumber(u8),
 }
 
 impl fmt::Display for Error {
@@ -58,6 +60,12 @@ impl fmt::Display for Error {
             Self::InvalidDeviceStatus(err) => {
                 write!(f, "invalid device status: {err}")
             }
+            Self::InvalidDeviceStatusLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid device status length, have: {have}, expected: {exp}"
+                )
+            }
             Self::InvalidRequestCode(err) => write!(f, "invalid request code: {err}"),
             Self::InvalidEventCode(err) => write!(f, "invalid event code: {err}"),
             Self::InvalidMessageCode((ty, code)) => write!(
@@ -68,6 +76,7 @@ impl fmt::Display for Error {
             Self::InvalidResponseLen((have, exp)) => {
                 write!(f, "invalid response length, have: {have}, expected: {exp}")
             }
+            Self::InvalidUnitNumber(err) => write!(f, "invalid unit number: {err:#x}"),
         }
     }
 }
