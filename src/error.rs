@@ -31,6 +31,8 @@ pub enum Error {
     InvalidFunctionStatus(u8),
     InvalidUnitStatusLen((usize, usize)),
     InvalidUnitStatusListLen((usize, usize)),
+    InvalidStackRequestDataLen((usize, usize)),
+    InvalidStackStatusChange(u8),
 }
 
 impl fmt::Display for Error {
@@ -94,6 +96,15 @@ impl fmt::Display for Error {
                     f,
                     "invalid unit status list length, have: {have}, expected a multiple of: {exp}"
                 )
+            }
+            Self::InvalidStackRequestDataLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid stack request data length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidStackStatusChange(err) => {
+                write!(f, "invalid stack status change: {err:#x}")
             }
         }
     }

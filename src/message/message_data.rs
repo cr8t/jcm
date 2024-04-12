@@ -305,7 +305,7 @@ mod tests {
             0x01, 0x00,
         ].into_iter().chain([0xff; MAX_LEN]).collect();
 
-        assert!(MessageData::try_from(raw.as_ref()).is_err());
+        assert!(MessageData::try_from(raw.as_slice()).is_err());
 
         Ok(())
     }

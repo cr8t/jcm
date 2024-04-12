@@ -7,6 +7,7 @@ mod message_code;
 mod message_data;
 mod message_id;
 mod message_type;
+mod request;
 mod response;
 
 pub use conf_id::*;
@@ -14,6 +15,7 @@ pub use message_code::*;
 pub use message_data::*;
 pub use message_id::*;
 pub use message_type::*;
+pub use request::*;
 pub use response::*;
 
 /// Maximum length of the [Message].

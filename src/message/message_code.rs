@@ -110,6 +110,18 @@ impl From<&MessageCode> for u16 {
     }
 }
 
+impl From<MessageCode> for u8 {
+    fn from(val: MessageCode) -> Self {
+        u16::from(val) as u8
+    }
+}
+
+impl From<&MessageCode> for u8 {
+    fn from(val: &MessageCode) -> Self {
+        (*val).into()
+    }
+}
+
 impl TryFrom<RawMessageCode> for MessageCode {
     type Error = Error;
 
