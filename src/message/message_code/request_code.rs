@@ -189,9 +189,61 @@ impl TryFrom<u16> for RequestCode {
     }
 }
 
+impl From<RequestCode> for &'static str {
+    fn from(val: RequestCode) -> Self {
+        match val {
+            RequestCode::Uid => "Uid",
+            RequestCode::ProgramSignature => "ProgramSignature",
+            RequestCode::Version => "Version",
+            RequestCode::SerialNumber => "SerialNumber",
+            RequestCode::ModelName => "ModelName",
+            RequestCode::Status => "Status",
+            RequestCode::Reset => "Reset",
+            RequestCode::Inhibit => "Inhibit",
+            RequestCode::Collect => "Collect",
+            RequestCode::Key => "Key",
+            RequestCode::EventResendInterval => "EventResendInterval",
+            RequestCode::Idle => "Idle",
+            RequestCode::Stack => "Stack",
+            RequestCode::Reject => "Reject",
+            RequestCode::Hold => "Hold",
+            RequestCode::AcceptorCollect => "AcceptorCollect",
+            RequestCode::DenominationDisable => "DenominationDisable",
+            RequestCode::DirectionDisable => "DirectionDisable",
+            RequestCode::CurrencyAssign => "CurrencyAssign",
+            RequestCode::CashBoxSize => "CashBoxSize",
+            RequestCode::NearFull => "NearFull",
+            RequestCode::BarCode => "BarCode",
+            RequestCode::Insert => "Insert",
+            RequestCode::ConditionalVend => "ConditionalVend",
+            RequestCode::Pause => "Pause",
+            RequestCode::NoteDataInfo => "NoteDataInfo",
+            RequestCode::RecyclerCollect => "RecyclerCollect",
+            RequestCode::Reserved => "Reserved",
+        }
+    }
+}
+
 impl From<&RequestCode> for &'static str {
     fn from(val: &RequestCode) -> Self {
-        match val {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for RequestCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
+    }
+}
+
+/// Convenience struct to display details for [RequestCode].
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RequestCodeDetails(pub RequestCode);
+
+impl From<RequestCodeDetails> for &'static str {
+    fn from(val: RequestCodeDetails) -> Self {
+        match val.0 {
             RequestCode::Uid => "request to get/set UID information",
             RequestCode::ProgramSignature => "request hash value of the firmware, or the supported hash algorithm",
             RequestCode::Version => "request the version of the device firmware",
@@ -219,18 +271,18 @@ impl From<&RequestCode> for &'static str {
             RequestCode::Pause => "request to send or set the `Pause` duration, and `Status and Event Message` enabled/disabled settings information",
             RequestCode::NoteDataInfo => "request to send information of an inserted note",
             RequestCode::RecyclerCollect => "request for retrieving",
-            RequestCode::Reserved => "reserved",
+            RequestCode::Reserved => "reserved code",
         }
     }
 }
 
-impl From<RequestCode> for &'static str {
-    fn from(val: RequestCode) -> Self {
-        (&val).into()
+impl From<&RequestCodeDetails> for &'static str {
+    fn from(val: &RequestCodeDetails) -> Self {
+        (*val).into()
     }
 }
 
-impl fmt::Display for RequestCode {
+impl fmt::Display for RequestCodeDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, r#""{}""#, <&str>::from(self))
     }

@@ -191,9 +191,62 @@ impl TryFrom<u16> for EventCode {
     }
 }
 
+impl From<EventCode> for &'static str {
+    fn from(val: EventCode) -> Self {
+        match val {
+            EventCode::PowerUp => "PowerUp",
+            EventCode::PowerUpAcceptor => "PowerUpAcceptor",
+            EventCode::PowerUpStacker => "PowerUpStacker",
+            EventCode::Inhibit => "Inhibit",
+            EventCode::ProgramSignature => "ProgramSignature",
+            EventCode::Rejected => "Rejected",
+            EventCode::Collected => "Collected",
+            EventCode::Clear => "Clear",
+            EventCode::OperationError => "OperationError",
+            EventCode::Failure => "Failure",
+            EventCode::NoteStay => "NoteStay",
+            EventCode::PowerUpAcceptorAccepting => "PowerUpAcceptorAccepting",
+            EventCode::PowerUpStackerAccepting => "PowerUpStackerAccepting",
+            EventCode::Idle => "Idle",
+            EventCode::Escrow => "Escrow",
+            EventCode::VendValid => "VendValid",
+            EventCode::AcceptorRejected => "AcceptorRejected",
+            EventCode::Returned => "Returned",
+            EventCode::AcceptorCollected => "AcceptorCollected",
+            EventCode::Insert => "Insert",
+            EventCode::ConditionalVend => "ConditionalVend",
+            EventCode::Pause => "Pause",
+            EventCode::Resume => "Resume",
+            EventCode::AcceptorClear => "AcceptorClear",
+            EventCode::AcceptorOperationError => "AcceptorOperationError",
+            EventCode::AcceptorFailure => "AcceptorFailure",
+            EventCode::AcceptorNoteStay => "AcceptorNoteStay",
+            EventCode::FunctionAbeyance => "FunctionAbeyance",
+            EventCode::Reserved => "Reserved",
+        }
+    }
+}
+
 impl From<&EventCode> for &'static str {
     fn from(val: &EventCode) -> Self {
-        match val {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for EventCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
+    }
+}
+
+/// Convenience struct to display details for [EventCode].
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EventCodeDetails(pub EventCode);
+
+impl From<EventCodeDetails> for &'static str {
+    fn from(val: EventCodeDetails) -> Self {
+        match val.0 {
             EventCode::PowerUp => "normal `Power Up` status",
             EventCode::PowerUpAcceptor => "detected a returnable note on `Power Up`",
             EventCode::PowerUpStacker => "detected a non-returnable note on `Power Up`",
@@ -235,13 +288,13 @@ impl From<&EventCode> for &'static str {
     }
 }
 
-impl From<EventCode> for &'static str {
-    fn from(val: EventCode) -> Self {
-        (&val).into()
+impl From<&EventCodeDetails> for &'static str {
+    fn from(val: &EventCodeDetails) -> Self {
+        (*val).into()
     }
 }
 
-impl fmt::Display for EventCode {
+impl fmt::Display for EventCodeDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, r#""{}""#, <&str>::from(self))
     }
