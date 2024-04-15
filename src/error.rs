@@ -33,6 +33,7 @@ pub enum Error {
     InvalidUnitStatusListLen((usize, usize)),
     InvalidStackRequestDataLen((usize, usize)),
     InvalidStackStatusChange(u8),
+    InvalidRejectCode(u8),
 }
 
 impl fmt::Display for Error {
@@ -105,6 +106,9 @@ impl fmt::Display for Error {
             }
             Self::InvalidStackStatusChange(err) => {
                 write!(f, "invalid stack status change: {err:#x}")
+            }
+            Self::InvalidRejectCode(err) => {
+                write!(f, "invalid reject code: {err:#x}")
             }
         }
     }
