@@ -142,13 +142,13 @@ impl fmt::Display for MessageCode {
         match self {
             Self::Request(c) => write!(
                 f,
-                r#"{{"message_type": "request", "code": {:#x}, "details": {c}}}"#,
-                u16::from(c)
+                r#"{{"message_type": "request", "code": {c}, "details": {}}}"#,
+                RequestCodeDetails(*c)
             ),
             Self::Event(c) => write!(
                 f,
-                r#"{{"message_type": "event", "code": {:#x}, "details": {c}}}"#,
-                u16::from(c)
+                r#"{{"message_type": "event", "code": {c}, "details": {}}}"#,
+                EventCodeDetails(*c)
             ),
             Self::Reserved => write!(
                 f,
