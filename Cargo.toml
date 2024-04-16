@@ -11,3 +11,4 @@ license = "MIT"
 
 [dependencies]
 log = "0.4"
+currency-iso4217 = "0.1"

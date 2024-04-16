@@ -3,9 +3,16 @@
 version = 3
 
 [[package]]
+name = "currency-iso4217"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4720b4a6b29445792417fdd5b2b59ab20f89aeac0c24d2f57c40c3ac931801d0"
+
+[[package]]
 name = "jcm"
 version = "0.1.0-pre-release"
 dependencies = [
+ "currency-iso4217",
  "log",
 ]
 
