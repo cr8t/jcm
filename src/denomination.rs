@@ -1,205 +1,214 @@
-use std::fmt;
+use std::{cmp, fmt, mem};
 
 use crate::{Error, Result};
+pub use currency_iso4217::Currency as CurrencyCode;
 
-const TWENTY_MXN: u8 = 0x02;
-const FIFTY_MXN: u8 = 0x05;
-const HUNDRED_MXN: u8 = 0x0a;
-const TWO_HUNDRED_MXN: u8 = 0x14;
-const FIVE_HUNDRED_MXN: u8 = 0x32;
-const THOUSAND_MXN: u8 = 0x64;
-const RESERVED_MXN: u8 = 0xff;
+const DENOM_INT_SHIFT: u8 = 8;
+const DENOM_EXP_MAX: u32 = 19;
+const DENOM_BASE: u64 = 10;
 
-const ONE_USD: u8 = 0x01;
-const TWO_USD: u8 = 0x02;
-const FIVE_USD: u8 = 0x05;
-const TEN_USD: u8 = 0x0a;
-const TWENTY_USD: u8 = 0x14;
-const FIFTY_USD: u8 = 0x32;
-const HUNDRED_USD: u8 = 0x64;
-const RESERVED_USD: u8 = 0xff;
-
-/// Represents device currency denomination countries.
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Denomination {
-    Mxn,
-    Usd,
+/// Represents device currency code and denomination.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Currency {
+    code: CurrencyCode,
+    denomination: Denomination,
 }
 
-impl From<&Denomination> for &'static str {
-    fn from(val: &Denomination) -> Self {
+impl fmt::Display for Currency {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            r#""{} {}""#,
+            self.denomination.value(),
+            <&str>::from(self.code)
+        )
+    }
+}
+
+/// Represents the currency denomination.
+///
+/// ## Format
+///
+/// Field  | Integer | Exponent
+/// -------|---------|---------
+/// Length | 1 byte  | 1 byte
+///
+/// Denominations representable by a [`u8`] will have a zero exponent, e.g. `100 = 100 * 10^0`.
+///
+/// Any denomination above [`u8::MAX`] will have a non-zero exponent, e.g. `500 = 50 * 10^1`.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Denomination(u16);
+
+impl Denomination {
+    /// Creates a new [Denomination].
+    pub const fn new() -> Self {
+        Self(0x0100)
+    }
+
+    /// Gets the `integer` field of the [Denomination].
+    pub const fn integer(&self) -> u8 {
+        (self.0 >> DENOM_INT_SHIFT) as u8
+    }
+
+    /// Gets the `exponent` field of the [Denomination].
+    pub const fn exponent(&self) -> u8 {
+        self.0 as u8
+    }
+
+    /// Gets the value of the [Denomination].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use jcm::Denomination;
+    ///
+    /// let denom = Denomination::new();
+    /// assert_eq!(denom.integer(), 1);
+    /// assert_eq!(denom.exponent(), 0);
+    /// assert_eq!(denom.value(), 1);
+    ///
+    /// let denom = Denomination::from_value(500);
+    /// assert_eq!(denom.integer(), 50);
+    /// assert_eq!(denom.exponent(), 1);
+    /// assert_eq!(denom.value(), 500);
+    /// ```
+    pub fn value(&self) -> u64 {
+        let exp = cmp::min(self.exponent() as u32, DENOM_EXP_MAX);
+        (self.integer() as u64).saturating_mul(DENOM_BASE.pow(exp))
+    }
+
+    /// Infallible function that converts a value into a [Denomination].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use jcm::Denomination;
+    ///
+    /// let denom = Denomination::from_value(2000);
+    /// assert_eq!(denom.integer(), 200);
+    /// assert_eq!(denom.exponent(), 1);
+    /// assert_eq!(denom.value(), 2000);
+    /// ```
+    pub fn from_value(val: u64) -> Self {
         match val {
-            Denomination::Mxn => "MXN",
-            Denomination::Usd => "USD",
+            v if v <= u8::MAX as u64 => Self((val << 8) as u16),
+            v if v % 10 == 0 => {
+                let exp = (val as f64).log10().floor() as u32;
+                let (int, exp) = match val.saturating_div(10u64.pow(exp)) {
+                    i if i == 1 || i == 2 => (i * 100, exp - 2),
+                    i if i == 5 || i == 25 => (i * 10, exp - 1),
+                    i => (i, exp),
+                };
+
+                Self(((int << 8) as u16) | exp as u16)
+            }
+            _ => Self(0),
+        }
+    }
+
+    /// Gets the length of the [Denomination].
+    pub const fn len() -> usize {
+        mem::size_of::<u16>()
+    }
+
+    /// Gets whether the [Denomination] is empty.
+    pub const fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+
+    /// Gets whether the [Denomination] is valid.
+    pub const fn is_valid(&self) -> bool {
+        matches!(self.integer(), 1 | 2 | 5 | 10 | 20 | 50 | 100 | 200 | 250)
+    }
+
+    /// Infallible function to convert a byte buffer into a [Denomination].
+    pub fn from_bytes(val: &[u8]) -> Self {
+        match val.len() {
+            0 => Self(0),
+            1 => Self((val[0] as u16) << DENOM_INT_SHIFT),
+            _ => Self(((val[0] as u16) << DENOM_INT_SHIFT) | val[1] as u16),
+        }
+    }
+
+    /// Gets whether the value is a valid [Denomination].
+    pub fn valid_value(val: u64) -> bool {
+        [1, 2, 5, 10, 20, 50, 100, 200, 250]
+            .into_iter()
+            .any(|v| val % v == 0 && (val <= 10 || val % 10 == 0))
+    }
+}
+
+impl TryFrom<u64> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: u64) -> Result<Self> {
+        match Self::from_value(val) {
+            d if d.is_valid() => Ok(d),
+            d => Err(Error::InvalidDenomination((d.integer(), d.exponent()))),
         }
     }
 }
 
-impl From<Denomination> for &'static str {
-    fn from(val: Denomination) -> Self {
-        (&val).into()
+impl TryFrom<u32> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: u32) -> Result<Self> {
+        (val as u64).try_into()
+    }
+}
+
+impl TryFrom<u16> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: u16) -> Result<Self> {
+        (val as u64).try_into()
+    }
+}
+
+impl TryFrom<u8> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: u8) -> Result<Self> {
+        (val as u64).try_into()
+    }
+}
+
+impl TryFrom<&[u8]> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self> {
+        match Self::from_bytes(val) {
+            d if d.is_valid() => Ok(d),
+            d => Err(Error::InvalidDenomination((d.integer(), d.exponent()))),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<[u8; N]> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: [u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8; N]> for Denomination {
+    type Error = Error;
+
+    fn try_from(val: &[u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
     }
 }
 
 impl fmt::Display for Denomination {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, r#""{}""#, <&str>::from(self))
-    }
-}
-
-/// Represents currency denominations: Mexican Peso.
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DenominationMxn {
-    Twenty = TWENTY_MXN,
-    Fifty = FIFTY_MXN,
-    Hundred = HUNDRED_MXN,
-    TwoHundred = TWO_HUNDRED_MXN,
-    FiveHundred = FIVE_HUNDRED_MXN,
-    Thousand = THOUSAND_MXN,
-    Reserved = RESERVED_MXN,
-}
-
-impl DenominationMxn {
-    /// Creates a new [DenominationMxn].
-    pub const fn new() -> Self {
-        Self::Twenty
-    }
-
-    /// Infallible conversion from a [`u8`] into a [DenominationMxn].
-    pub const fn from_u8(val: u8) -> Self {
-        match val {
-            TWENTY_MXN => Self::Twenty,
-            FIFTY_MXN => Self::Fifty,
-            HUNDRED_MXN => Self::Hundred,
-            TWO_HUNDRED_MXN => Self::TwoHundred,
-            FIVE_HUNDRED_MXN => Self::FiveHundred,
-            THOUSAND_MXN => Self::Thousand,
-            _ => Self::Reserved,
-        }
-    }
-}
-
-impl Default for DenominationMxn {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl From<&DenominationMxn> for &'static str {
-    fn from(val: &DenominationMxn) -> Self {
-        match val {
-            DenominationMxn::Twenty => "20 MXN",
-            DenominationMxn::Fifty => "50 MXN",
-            DenominationMxn::Hundred => "100 MXN",
-            DenominationMxn::TwoHundred => "200 MXN",
-            DenominationMxn::FiveHundred => "500 MXN",
-            DenominationMxn::Thousand => "1000 MXN",
-            DenominationMxn::Reserved => "Reserved MXN",
-        }
-    }
-}
-
-impl From<DenominationMxn> for &'static str {
-    fn from(val: DenominationMxn) -> Self {
-        (&val).into()
-    }
-}
-
-impl fmt::Display for DenominationMxn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, r#""{}""#, <&str>::from(self))
-    }
-}
-
-impl TryFrom<u8> for DenominationMxn {
-    type Error = Error;
-
-    fn try_from(val: u8) -> Result<Self> {
-        match Self::from_u8(val) {
-            Self::Reserved => Err(Error::InvalidDenomination((Denomination::Mxn, val))),
-            cur => Ok(cur),
-        }
-    }
-}
-
-/// Represents currency denominations: US Dollar.
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DenominationUsd {
-    One = ONE_USD,
-    Two = TWO_USD,
-    Five = FIVE_USD,
-    Ten = TEN_USD,
-    Twenty = TWENTY_USD,
-    Fifty = FIFTY_USD,
-    Hundred = HUNDRED_USD,
-    Reserved = RESERVED_USD,
-}
-
-impl DenominationUsd {
-    /// Creates a new [DenominationUsd].
-    pub const fn new() -> Self {
-        Self::One
-    }
-
-    /// Infallible conversion from a [`u8`] into a [DenominationUsd].
-    pub const fn from_u8(val: u8) -> Self {
-        match val {
-            ONE_USD => Self::One,
-            TWO_USD => Self::Two,
-            FIVE_USD => Self::Five,
-            TEN_USD => Self::Ten,
-            TWENTY_USD => Self::Twenty,
-            FIFTY_USD => Self::Fifty,
-            HUNDRED_USD => Self::Hundred,
-            _ => Self::Reserved,
-        }
-    }
-}
-
-impl Default for DenominationUsd {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl From<&DenominationUsd> for &'static str {
-    fn from(val: &DenominationUsd) -> Self {
-        match val {
-            DenominationUsd::One => "1 USD",
-            DenominationUsd::Two => "2 USD",
-            DenominationUsd::Five => "5 USD",
-            DenominationUsd::Ten => "10 USD",
-            DenominationUsd::Twenty => "20 USD",
-            DenominationUsd::Fifty => "50 USD",
-            DenominationUsd::Hundred => "100 USD",
-            DenominationUsd::Reserved => "Reserved USD",
-        }
-    }
-}
-
-impl From<DenominationUsd> for &'static str {
-    fn from(val: DenominationUsd) -> Self {
-        (&val).into()
-    }
-}
-
-impl fmt::Display for DenominationUsd {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, r#""{}""#, <&str>::from(self))
-    }
-}
-
-impl TryFrom<u8> for DenominationUsd {
-    type Error = Error;
-
-    fn try_from(val: u8) -> Result<Self> {
-        match Self::from_u8(val) {
-            Self::Reserved => Err(Error::InvalidDenomination((Denomination::Usd, val))),
-            cur => Ok(cur),
-        }
+        write!(f, "{{")?;
+        write!(f, r#""integer": {:#x}, "#, self.integer())?;
+        write!(f, r#""exponent": {:#x}, "#, self.exponent())?;
+        write!(f, r#""value": {:#x}"#, self.value())?;
+        write!(f, "}}")
     }
 }
 
@@ -208,63 +217,55 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_denomination_mxn() {
-        let raw_denom = [
-            TWENTY_MXN,
-            FIFTY_MXN,
-            HUNDRED_MXN,
-            TWO_HUNDRED_MXN,
-            FIVE_HUNDRED_MXN,
-            THOUSAND_MXN,
-        ];
-        let expected = [
-            DenominationMxn::Twenty,
-            DenominationMxn::Fifty,
-            DenominationMxn::Hundred,
-            DenominationMxn::TwoHundred,
-            DenominationMxn::FiveHundred,
-            DenominationMxn::Thousand,
+    fn test_denomination() {
+        let raw_vals = [1, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 10_000u64];
+        let exp_ints = [1, 2, 5, 10, 20, 50, 100, 250, 50, 100, 100];
+        let exp_exps = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2];
+        let exp_denoms = [
+            Denomination(0x0100),
+            Denomination(0x0200),
+            Denomination(0x0500),
+            Denomination(0x0a00),
+            Denomination(0x1400),
+            Denomination(0x3200),
+            Denomination(0x6400),
+            Denomination(0xfa00),
+            Denomination(0x3201),
+            Denomination(0x6401),
+            Denomination(0x6402),
         ];
 
-        for (raw, exp) in raw_denom.into_iter().zip(expected.into_iter()) {
-            assert_eq!(DenominationMxn::try_from(raw), Ok(exp));
-            assert_eq!(DenominationMxn::from_u8(raw), exp);
-        }
+        raw_vals.into_iter().enumerate().for_each(|(i, val)| {
+            assert_eq!(Denomination::try_from(val), Ok(exp_denoms[i]));
+            assert_eq!(
+                Denomination::try_from([exp_ints[i], exp_exps[i]]),
+                Ok(exp_denoms[i])
+            );
 
-        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
-            assert!(DenominationMxn::try_from(stat).is_err());
-            assert_eq!(DenominationMxn::from_u8(stat), DenominationMxn::Reserved);
-        }
+            let denom = Denomination::from_value(val);
+
+            assert_eq!(denom, exp_denoms[i]);
+            assert_eq!(denom.integer(), exp_ints[i]);
+            assert_eq!(denom.exponent(), exp_exps[i]);
+            assert_eq!(denom.value(), val);
+
+            assert!(denom.is_valid());
+            assert!(!denom.is_empty());
+        });
     }
 
     #[test]
-    fn test_denomination_usd() {
-        let raw_denom = [
-            ONE_USD,
-            TWO_USD,
-            FIVE_USD,
-            TEN_USD,
-            TWENTY_USD,
-            FIFTY_USD,
-            HUNDRED_USD,
-        ];
-        let expected = [
-            DenominationUsd::One,
-            DenominationUsd::Two,
-            DenominationUsd::Five,
-            DenominationUsd::Ten,
-            DenominationUsd::Twenty,
-            DenominationUsd::Fifty,
-            DenominationUsd::Hundred,
-        ];
+    fn test_denomination_invalid() {
+        let zero_denom = Denomination::from_value(0);
 
-        for (raw, exp) in raw_denom.into_iter().zip(expected.into_iter()) {
-            assert_eq!(DenominationUsd::try_from(raw), Ok(exp));
-        }
+        assert!(zero_denom.is_empty());
+        assert!(!zero_denom.is_valid());
 
-        for stat in (0..=255u8).filter(|s| !raw_denom.iter().any(|d| d == s)) {
-            assert!(DenominationUsd::try_from(stat).is_err());
-            assert_eq!(DenominationUsd::from_u8(stat), DenominationUsd::Reserved);
-        }
+        (0..=u16::MAX)
+            .filter(|&v| !Denomination::valid_value(v as u64))
+            .for_each(|val| {
+                assert!(!Denomination::from_value(val as u64).is_valid());
+                assert!(Denomination::try_from(val).is_err());
+            });
     }
 }
