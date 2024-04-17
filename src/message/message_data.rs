@@ -1,7 +1,15 @@
 use std::{cmp, fmt, mem};
 
-use super::{ConfId, MessageCode, MessageType, RawMessageCode, MAX_LEN};
+use super::MAX_LEN;
 use crate::{Error, Result};
+
+mod conf_id;
+mod message_code;
+mod message_type;
+
+pub use conf_id::*;
+pub use message_code::*;
+pub use message_type::*;
 
 const MAX_DATA_LEN: usize = MAX_LEN - MessageData::meta_len();
 
