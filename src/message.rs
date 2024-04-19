@@ -102,7 +102,7 @@ impl From<&Message> for Vec<u8> {
     fn from(val: &Message) -> Self {
         [val.id.into()]
             .into_iter()
-            .chain((val.data.len() as u16).to_be_bytes())
+            .chain((val.len() as u16).to_le_bytes())
             .chain(Vec::<u8>::from(val.data()))
             .collect()
     }
@@ -112,7 +112,7 @@ impl From<Message> for Vec<u8> {
     fn from(val: Message) -> Self {
         [val.id.into()]
             .into_iter()
-            .chain((val.data.len() as u16).to_be_bytes())
+            .chain((val.len() as u16).to_le_bytes())
             .chain(Vec::<u8>::from(val.data))
             .collect()
     }
