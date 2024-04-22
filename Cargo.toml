@@ -9,6 +9,33 @@ categories = ["finance", "data-structures"]
 repository = "https://github.com/decapod-atm/jcm"
 license = "MIT"
 
-[dependencies]
-log = "0.4"
-currency-iso4217 = "0.1"
+[dependencies.currency-iso4217]
+version = "0.1"
+
+[dependencies.log]
+version = "0.4"
+
+[dependencies.crossbeam]
+version = "0.8"
+optional = true
+
+[dependencies.nusb]
+version = "0.1"
+optional = true
+
+[dependencies.futures-lite]
+version = "2.2.0"
+optional = true
+
+[dependencies.smol-timeout]
+version = "0.6"
+optional = true
+
+[dev-dependencies.env_logger]
+version = "0.10"
+
+[features]
+default = ["usb"]
+usb = ["crossbeam", "nusb", "futures-lite", "smol-timeout"]
+e2e-tests = ["usb"]
+jcm-service = ["usb"]

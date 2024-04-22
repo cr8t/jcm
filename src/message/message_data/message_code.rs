@@ -51,6 +51,18 @@ impl MessageCode {
         matches!(self, Self::Event(_))
     }
 
+    /// Gets whether the [MessageCode] contains a `PowerUp` [EventCode] variant.
+    pub const fn is_power_up_event(&self) -> bool {
+        matches!(
+            self,
+            Self::Event(EventCode::PowerUp)
+                | Self::Event(EventCode::PowerUpAcceptor)
+                | Self::Event(EventCode::PowerUpStacker)
+                | Self::Event(EventCode::PowerUpAcceptorAccepting)
+                | Self::Event(EventCode::PowerUpStackerAccepting)
+        )
+    }
+
     /// Converts the [MessageCode] into a [EventCode].
     pub const fn event_code(&self) -> Result<EventCode> {
         match self {
