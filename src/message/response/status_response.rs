@@ -1,6 +1,8 @@
 use std::{cmp, fmt, mem};
 
-use crate::{DeviceStatus, Error, Response, ResponseCode, Result, UnitStatus, UnitStatusList};
+use crate::{
+    DeviceStatus, Error, Message, Response, ResponseCode, Result, UnitStatus, UnitStatusList,
+};
 
 /// Maximum number of [UnitStatus] items in a [StatusResponse].
 pub const MAX_UNIT_STATUS_LEN: usize = u8::MAX as usize;
@@ -167,12 +169,12 @@ impl TryFrom<&Response> for StatusResponse {
             _ => {
                 let status_len = val.additional[0] as usize;
                 match status_len {
-                    sl if sl == meta_len && sl == res_len => Ok(Self {
+                    sl if sl == DeviceStatus::len() => Ok(Self {
                         code: val.code,
                         status: val.additional[1..=2].as_ref().try_into()?,
                         unit_status: UnitStatusList::new(),
                     }),
-                    sl if sl > meta_len && sl == res_len => Ok(Self {
+                    sl if sl > DeviceStatus::len() => Ok(Self {
                         code: val.code,
                         status: val.additional[1..=2].as_ref().try_into()?,
                         unit_status: val.additional[3..].as_ref().try_into()?,
@@ -189,6 +191,22 @@ impl TryFrom<Response> for StatusResponse {
 
     fn try_from(val: Response) -> Result<Self> {
         (&val).try_into()
+    }
+}
+
+impl TryFrom<&Message> for StatusResponse {
+    type Error = Error;
+
+    fn try_from(val: &Message) -> Result<Self> {
+        Response::try_from(val)?.try_into()
+    }
+}
+
+impl TryFrom<Message> for StatusResponse {
+    type Error = Error;
+
+    fn try_from(val: Message) -> Result<Self> {
+        Response::try_from(val)?.try_into()
     }
 }
 

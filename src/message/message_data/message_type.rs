@@ -44,6 +44,14 @@ impl MessageType {
         mem::size_of::<u8>()
     }
 
+    pub const fn is_request(&self) -> bool {
+        matches!(self, Self::Request(_))
+    }
+
+    pub const fn is_event(&self) -> bool {
+        matches!(self, Self::Event(_))
+    }
+
     /// Gets whether the [MessageType] contains a reserved variant.
     pub const fn is_empty(&self) -> bool {
         matches!(self, Self::Reserved)

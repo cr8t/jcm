@@ -10,6 +10,8 @@ mod reject_code;
 mod status_code;
 mod unit_number;
 mod unit_status;
+#[cfg(feature = "usb")]
+pub mod usb;
 
 pub use bill_acceptor_state::*;
 pub use denomination::*;

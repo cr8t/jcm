@@ -4,7 +4,7 @@ use std::fmt;
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Represents error variants for the library.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
     InvalidBillAcceptorState(u8),
     InvalidDenomination((u8, u8)),
@@ -32,6 +32,8 @@ pub enum Error {
     InvalidStackRequestDataLen((usize, usize)),
     InvalidStackStatusChange(u8),
     InvalidRejectCode(u8),
+    #[cfg(feature = "usb")]
+    Usb(String),
 }
 
 impl fmt::Display for Error {
@@ -108,6 +110,8 @@ impl fmt::Display for Error {
             Self::InvalidRejectCode(err) => {
                 write!(f, "invalid reject code: {err:#x}")
             }
+            #[cfg(feature = "usb")]
+            Self::Usb(err) => write!(f, "USB error: {err}"),
         }
     }
 }
