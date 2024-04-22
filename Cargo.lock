@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "jcm"
-version = "0.1.0-pre-release"
+version = "0.1.0"
 dependencies = [
  "crossbeam",
  "currency-iso4217",
