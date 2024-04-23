@@ -2,11 +2,13 @@ use std::{fmt, mem};
 
 use crate::{Error, Result};
 
+mod event;
 mod message_data;
 mod message_id;
 mod request;
 mod response;
 
+pub use event::*;
 pub use message_data::*;
 pub use message_id::*;
 pub use request::*;

@@ -30,6 +30,7 @@ pub enum Error {
     InvalidUnitStatusLen((usize, usize)),
     InvalidUnitStatusListLen((usize, usize)),
     InvalidStackRequestDataLen((usize, usize)),
+    InvalidEventLen((usize, usize)),
     InvalidStackStatusChange(u8),
     InvalidRejectCode(u8),
     #[cfg(feature = "usb")]
@@ -103,6 +104,9 @@ impl fmt::Display for Error {
                     f,
                     "invalid stack request data length, have: {have}, expected: {exp}"
                 )
+            }
+            Self::InvalidEventLen((have, exp)) => {
+                write!(f, "invalid event length, have: {have}, expected: {exp}")
             }
             Self::InvalidStackStatusChange(err) => {
                 write!(f, "invalid stack status change: {err:#x}")
