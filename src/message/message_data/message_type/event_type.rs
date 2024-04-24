@@ -71,6 +71,26 @@ impl EventType {
             _ => Self::Reserved,
         }
     }
+
+    /// Converts the [EventType] to a [`u8`].
+    pub const fn to_u8(&self) -> u8 {
+        *self as u8
+    }
+
+    /// Gets the length of the [EventType].
+    pub const fn len() -> usize {
+        mem::size_of::<u8>()
+    }
+
+    /// Gets whether the [EventType] contains a reserved variant.
+    pub const fn is_empty(&self) -> bool {
+        matches!(self, Self::Reserved)
+    }
+
+    /// Gets whether the [EventType] is a valid variant.
+    pub const fn is_valid(&self) -> bool {
+        !self.is_empty()
+    }
 }
 
 impl TryFrom<u8> for EventType {

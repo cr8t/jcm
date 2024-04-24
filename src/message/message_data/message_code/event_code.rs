@@ -141,6 +141,11 @@ impl EventCode {
         }
     }
 
+    /// Converts the [EventCode] into a byte array.
+    pub const fn to_bytes(&self) -> [u8; 2] {
+        (*self as u16).to_le_bytes()
+    }
+
     /// Gets the length of the [EventCode].
     pub const fn len() -> usize {
         mem::size_of::<u16>()
@@ -159,11 +164,6 @@ impl EventCode {
     /// Gets whether the [EventCode] is a valid variant.
     pub const fn is_valid(&self) -> bool {
         !self.is_empty()
-    }
-
-    /// Converts the [EventCode] into a byte array.
-    pub fn to_bytes(&self) -> [u8; 2] {
-        (*self as u16).to_le_bytes()
     }
 }
 
@@ -193,6 +193,34 @@ impl TryFrom<u16> for EventCode {
             Self::Reserved => Err(Error::InvalidEventCode(val)),
             v => Ok(v),
         }
+    }
+}
+
+impl TryFrom<&[u8]> for EventCode {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self> {
+        match val.len() {
+            0 => Err(Error::InvalidEventCode(0)),
+            1 => Err(Error::InvalidEventCode(val[0] as u16)),
+            _ => u16::from_le_bytes([val[0], val[1]]).try_into(),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8; N]> for EventCode {
+    type Error = Error;
+
+    fn try_from(val: &[u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
+    }
+}
+
+impl<const N: usize> TryFrom<[u8; N]> for EventCode {
+    type Error = Error;
+
+    fn try_from(val: [u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
     }
 }
 
@@ -235,34 +263,6 @@ impl From<EventCode> for &'static str {
 impl From<&EventCode> for &'static str {
     fn from(val: &EventCode) -> Self {
         (*val).into()
-    }
-}
-
-impl TryFrom<&[u8]> for EventCode {
-    type Error = Error;
-
-    fn try_from(val: &[u8]) -> Result<Self> {
-        match val.len() {
-            0 => Err(Error::InvalidEventCode(0)),
-            1 => Err(Error::InvalidEventCode(val[0] as u16)),
-            _ => Self::try_from(u16::from_le_bytes([val[0], val[1]])),
-        }
-    }
-}
-
-impl<const N: usize> TryFrom<&[u8; N]> for EventCode {
-    type Error = Error;
-
-    fn try_from(val: &[u8; N]) -> Result<Self> {
-        val.as_ref().try_into()
-    }
-}
-
-impl<const N: usize> TryFrom<[u8; N]> for EventCode {
-    type Error = Error;
-
-    fn try_from(val: [u8; N]) -> Result<Self> {
-        val.as_ref().try_into()
     }
 }
 

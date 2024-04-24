@@ -39,9 +39,34 @@ impl MessageType {
         }
     }
 
+    /// Converts the [MessageType] to a [`u8`].
+    pub const fn to_u8(&self) -> u8 {
+        match self {
+            Self::Request(c) => c.to_u8(),
+            Self::Event(c) => c.to_u8(),
+            Self::Reserved => RESERVED,
+        }
+    }
+
     /// Gets the length of the [MessageType].
     pub const fn len() -> usize {
         mem::size_of::<u8>()
+    }
+
+    /// Attempts to get the [MessageType] as a [RequestType].
+    pub const fn request_type(&self) -> Result<RequestType> {
+        match self {
+            Self::Request(req) => Ok(*req),
+            _ => Err(Error::InvalidRequestType(self.to_u8())),
+        }
+    }
+
+    /// Attempts to get the [MessageType] as a [EventType].
+    pub const fn event_type(&self) -> Result<EventType> {
+        match self {
+            Self::Event(evt) => Ok(*evt),
+            _ => Err(Error::InvalidEventType(self.to_u8())),
+        }
     }
 
     pub const fn is_request(&self) -> bool {

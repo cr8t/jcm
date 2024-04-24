@@ -139,6 +139,11 @@ impl RequestCode {
         }
     }
 
+    /// Converts the [RequestCode] to a byte array.
+    pub const fn to_bytes(&self) -> [u8; 2] {
+        (*self as u16).to_le_bytes()
+    }
+
     /// Extracts the [FuncId] from the [RequestCode].
     pub const fn func_id(&self) -> FuncId {
         FuncId::from_u16(*self as u16)
@@ -186,6 +191,34 @@ impl TryFrom<u16> for RequestCode {
             Self::Reserved => Err(Error::InvalidRequestCode(val)),
             v => Ok(v),
         }
+    }
+}
+
+impl TryFrom<&[u8]> for RequestCode {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self> {
+        match val.len() {
+            0 => Err(Error::InvalidRequestCode(0)),
+            1 => Err(Error::InvalidRequestCode(val[0] as u16)),
+            _ => u16::from_le_bytes([val[0], val[1]]).try_into(),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8; N]> for RequestCode {
+    type Error = Error;
+
+    fn try_from(val: &[u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
+    }
+}
+
+impl<const N: usize> TryFrom<[u8; N]> for RequestCode {
+    type Error = Error;
+
+    fn try_from(val: [u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
     }
 }
 
