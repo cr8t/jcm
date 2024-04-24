@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, mem};
 
 use super::*;
 use crate::{Error, Result};
@@ -31,6 +31,26 @@ impl RequestType {
             SET_FEATURE_REQ => Self::SetFeature,
             _ => Self::Reserved,
         }
+    }
+
+    /// Converts the [RequestType] to a [`u8`].
+    pub const fn to_u8(&self) -> u8 {
+        *self as u8
+    }
+
+    /// Gets the length of the [RequestType].
+    pub const fn len() -> usize {
+        mem::size_of::<u8>()
+    }
+
+    /// Gets whether the [RequestType] contains a reserved variant.
+    pub const fn is_empty(&self) -> bool {
+        matches!(self, Self::Reserved)
+    }
+
+    /// Gets whether the [RequestType] is a valid variant.
+    pub const fn is_valid(&self) -> bool {
+        !self.is_empty()
     }
 }
 

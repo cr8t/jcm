@@ -1,12 +1,13 @@
 use std::fmt;
 
-use crate::{Error, EventCode, Message, Result};
+use crate::{Error, EventCode, EventType, Message, MessageCode, MessageData, MessageType, Result};
 
 /// Represents an event [Message] sent by the device.
 #[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Event {
-    code: EventCode,
+    event_type: EventType,
+    event_code: EventCode,
     additional: Vec<u8>,
 }
 
@@ -14,24 +15,51 @@ impl Event {
     /// Creates a new [Event].
     pub const fn new() -> Self {
         Self {
-            code: EventCode::new(),
+            event_type: EventType::new(),
+            event_code: EventCode::new(),
             additional: Vec::new(),
         }
     }
 
+    /// Gets the [MessageType] of the [Event].
+    pub const fn message_type(&self) -> MessageType {
+        MessageType::Event(self.event_type)
+    }
+
+    /// Gets the [EventType] of the [Event].
+    pub const fn event_type(&self) -> EventType {
+        self.event_type
+    }
+
+    /// Sets the [EventType] of the [Event].
+    pub fn set_event_type(&mut self, event_type: EventType) {
+        self.event_type = event_type;
+    }
+
+    /// Builder function that sets the [EventType] of the [Event].
+    pub fn with_event_type(mut self, event_type: EventType) -> Self {
+        self.set_event_type(event_type);
+        self
+    }
+
+    /// Gets the [MessageCode] of the [Event].
+    pub const fn message_code(&self) -> MessageCode {
+        MessageCode::Event(self.event_code)
+    }
+
     /// Gets the [EventCode] of the [Event].
-    pub const fn code(&self) -> EventCode {
-        self.code
+    pub const fn event_code(&self) -> EventCode {
+        self.event_code
     }
 
     /// Sets the [EventCode] of the [Event].
-    pub fn set_code(&mut self, code: EventCode) {
-        self.code = code;
+    pub fn set_event_code(&mut self, code: EventCode) {
+        self.event_code = code;
     }
 
     /// Builder function that sets the [EventCode] of the [Event].
-    pub fn with_code(mut self, code: EventCode) -> Self {
-        self.set_code(code);
+    pub fn with_event_code(mut self, code: EventCode) -> Self {
+        self.set_event_code(code);
         self
     }
 
@@ -57,12 +85,12 @@ impl Event {
     }
 
     pub(crate) const fn meta_len() -> usize {
-        EventCode::len()
+        EventType::len() + EventCode::len()
     }
 
     /// Gets whether the [Event] is empty.
     pub const fn is_empty(&self) -> bool {
-        self.code.is_empty()
+        self.event_type.is_empty() || self.event_code.is_empty()
     }
 
     /// Writes the [Message] to the provided byte buffer.
@@ -73,10 +101,9 @@ impl Event {
         if buf_len < len {
             Err(Error::InvalidMessageLen((buf_len, len)))
         } else {
-            let msg_iter = self
-                .code
-                .to_bytes()
+            let msg_iter = [self.event_type.to_u8()]
                 .into_iter()
+                .chain(self.event_code.to_bytes())
                 .chain(self.additional.iter().cloned());
 
             buf.iter_mut()
@@ -99,12 +126,14 @@ impl TryFrom<&[u8]> for Event {
         match len {
             l if l < meta_len => Err(Error::InvalidEventLen((len, meta_len))),
             l if l == meta_len => Ok(Self {
-                code: val.try_into()?,
+                event_type: val[0].try_into()?,
+                event_code: val[EventType::len()..].try_into()?,
                 additional: Vec::new(),
             }),
             _ => Ok(Self {
-                code: val[..=1].try_into()?,
-                additional: val[2..].into(),
+                event_type: val[0].try_into()?,
+                event_code: val[EventType::len()..].try_into()?,
+                additional: val[Self::meta_len()..].into(),
             }),
         }
     }
@@ -114,7 +143,11 @@ impl TryFrom<&Message> for Event {
     type Error = Error;
 
     fn try_from(val: &Message) -> Result<Self> {
-        val.data().additional().try_into()
+        Ok(Self {
+            event_type: val.data().message_type().event_type()?,
+            event_code: val.data().message_code().event_code()?,
+            additional: val.data().additional().into(),
+        })
     }
 }
 
@@ -126,17 +159,37 @@ impl TryFrom<Message> for Event {
     }
 }
 
+impl From<&Event> for Message {
+    fn from(val: &Event) -> Self {
+        Self::new().with_data(
+            MessageData::new()
+                .with_message_type(val.message_type())
+                .with_message_code(val.message_code())
+                .with_additional(val.additional()),
+        )
+    }
+}
+
+impl From<Event> for Message {
+    fn from(val: Event) -> Self {
+        (&val).into()
+    }
+}
+
 impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
-        write!(f, r#""code":{}, "#, self.code)?;
+        write!(f, r#""event_type":{}, "#, self.event_type)?;
+        write!(f, r#""event_code":{}, "#, self.event_code)?;
         write!(f, r#""additional_data": ["#)?;
+
         for (i, d) in self.additional.iter().enumerate() {
             if i != 0 {
                 write!(f, ",")?;
             }
             write!(f, "{d}")?;
         }
+
         write!(f, "]}}")
     }
 }
@@ -144,37 +197,66 @@ impl fmt::Display for Event {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::MessageData;
 
     #[test]
     fn test_event() {
-        let raw = EventCode::PowerUp.to_bytes();
-        let msg = Message::new().with_data(MessageData::new().with_additional(&raw));
-        let exp = Event::new().with_code(EventCode::PowerUp);
+        let type_bytes = EventType::Sequence0.to_u8();
+        let code_bytes = EventCode::PowerUp.to_bytes();
+
+        let raw = [type_bytes, code_bytes[0], code_bytes[1]];
+
+        let msg = Message::new().with_data(
+            MessageData::new()
+                .with_message_type(MessageType::Event(EventType::Sequence0))
+                .with_message_code(MessageCode::Event(EventCode::PowerUp)),
+        );
+
+        let exp = Event::new()
+            .with_event_type(EventType::Sequence0)
+            .with_event_code(EventCode::PowerUp);
 
         assert_eq!(Event::try_from(raw.as_ref()), Ok(exp.clone()));
         assert_eq!(Event::try_from(&msg), Ok(exp.clone()));
         assert_eq!(Event::try_from(msg), Ok(exp.clone()));
 
-        let mut out = [0u8, 0u8];
+        let mut out = [0u8; Event::meta_len()];
         assert_eq!(exp.to_bytes(out.as_mut()), Ok(()));
         assert_eq!(out, raw);
     }
 
     #[test]
     fn test_event_with_data() {
-        let event_bytes = EventCode::Escrow.to_bytes();
-        let raw = [event_bytes[0], event_bytes[1], b'U', b'S', b'D', 0x64, 0x00];
-        let msg = Message::new().with_data(MessageData::new().with_additional(&raw));
+        let type_bytes = EventType::Sequence0.to_u8();
+        let code_bytes = EventCode::Escrow.to_bytes();
+
+        let raw = [
+            type_bytes,
+            code_bytes[0],
+            code_bytes[1],
+            b'U',
+            b'S',
+            b'D',
+            0x64,
+            0x00,
+        ];
+
+        let msg = Message::new().with_data(
+            MessageData::new()
+                .with_message_type(MessageType::Event(EventType::Sequence0))
+                .with_message_code(MessageCode::Event(EventCode::Escrow))
+                .with_additional(raw[Event::meta_len()..].as_ref()),
+        );
+
         let exp = Event::new()
-            .with_code(EventCode::Escrow)
-            .with_additional(&raw[2..]);
+            .with_event_type(EventType::Sequence0)
+            .with_event_code(EventCode::Escrow)
+            .with_additional(raw[Event::meta_len()..].as_ref());
 
         assert_eq!(Event::try_from(raw.as_ref()), Ok(exp.clone()));
         assert_eq!(Event::try_from(&msg), Ok(exp.clone()));
         assert_eq!(Event::try_from(msg), Ok(exp.clone()));
 
-        let mut out = [0u8; 7];
+        let mut out = [0u8; 8];
         assert_eq!(exp.to_bytes(out.as_mut()), Ok(()));
         assert_eq!(out, raw);
     }
