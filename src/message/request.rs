@@ -8,9 +8,11 @@ use crate::{
 
 mod reset_request;
 mod stack_request;
+mod status_request;
 
 pub use reset_request::*;
 pub use stack_request::*;
+pub use status_request::*;
 
 /// Represents an event [Message] sent by the device.
 #[repr(C)]

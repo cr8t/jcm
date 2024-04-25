@@ -69,12 +69,9 @@ fn test_device_status() -> Result<()> {
 
     log::info!("UID response: {res}");
 
-    let stat_data = jcm::MessageData::new()
+    let req: jcm::Message = jcm::MessageData::from(jcm::StatusRequest::new())
         .with_uid(1)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::Status))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Status));
-
-    let req = jcm::Message::new().with_data(stat_data);
+        .into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::debug!("Raw status response: {res}");
@@ -122,12 +119,9 @@ fn test_full_startup() -> Result<()> {
 
     log::info!("UID response: {res}");
 
-    let stat_data = jcm::MessageData::new()
+    let req: jcm::Message = jcm::MessageData::from(jcm::StatusRequest::new())
         .with_uid(1)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::Status))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Status));
-
-    let req = jcm::Message::new().with_data(stat_data);
+        .into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
     let res = jcm::StatusResponse::try_from(&res)?;
 
@@ -140,12 +134,9 @@ fn test_full_startup() -> Result<()> {
 
     log::info!("Reset response: {res}");
 
-    let stat_data = jcm::MessageData::new()
+    let req: jcm::Message = jcm::MessageData::from(jcm::StatusRequest::new())
         .with_uid(1)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::Status))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Status));
-
-    let req = jcm::Message::new().with_data(stat_data);
+        .into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
     let res = jcm::StatusResponse::try_from(&res)?;
 
@@ -158,7 +149,7 @@ fn test_full_startup() -> Result<()> {
         .with_message_type(jcm::MessageType::Request(jcm::RequestType::Operation))
         .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Idle));
 
-    let req = jcm::Message::new().with_data(idle_data);
+    let req = jcm::Message::from(idle_data);
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("Idle response: {res}");
