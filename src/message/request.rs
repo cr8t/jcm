@@ -6,13 +6,17 @@ use crate::{
     Error, Message, MessageCode, MessageData, MessageType, RequestCode, RequestType, Result,
 };
 
+mod request_mode;
 mod reset_request;
 mod stack_request;
 mod status_request;
+mod uid_request;
 
+pub use request_mode::*;
 pub use reset_request::*;
 pub use stack_request::*;
 pub use status_request::*;
+pub use uid_request::*;
 
 /// Represents an event [Message] sent by the device.
 #[repr(C)]

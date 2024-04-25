@@ -58,13 +58,7 @@ fn test_device_status() -> Result<()> {
 
     ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
 
-    let uid_data = jcm::MessageData::new()
-        .with_uid(0)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::SetFeature))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Uid))
-        .with_additional(&[0x1]);
-
-    let req = jcm::Message::new().with_data(uid_data);
+    let req: jcm::Message = jcm::MessageData::from(jcm::UidRequest::new_set(0x1)).into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("UID response: {res}");
@@ -108,13 +102,7 @@ fn test_full_startup() -> Result<()> {
 
     ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
 
-    let uid_data = jcm::MessageData::new()
-        .with_uid(0)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::SetFeature))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Uid))
-        .with_additional(&[0x1]);
-
-    let req = jcm::Message::new().with_data(uid_data);
+    let req: jcm::Message = jcm::MessageData::from(jcm::UidRequest::new_set(0x1)).into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("UID response: {res}");
