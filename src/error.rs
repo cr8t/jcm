@@ -36,6 +36,7 @@ pub enum Error {
     InvalidRejectCode(u8),
     InvalidRequestType(u8),
     InvalidEventType(u8),
+    InvalidMessage(((u8, u16), (u8, u16))),
     #[cfg(feature = "usb")]
     Usb(String),
 }
@@ -125,6 +126,9 @@ impl fmt::Display for Error {
             }
             Self::InvalidEventType(err) => {
                 write!(f, "invalid event type: {err:#x}")
+            }
+            Self::InvalidMessage(((have_type, have_code), (exp_type, exp_code))) => {
+                write!(f, "invalid message, have: {have_type} - {have_code}, expected: {exp_type} - {exp_code}")
             }
             #[cfg(feature = "usb")]
             Self::Usb(err) => write!(f, "USB error: {err}"),

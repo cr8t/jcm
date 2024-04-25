@@ -1,6 +1,6 @@
 use std::{cmp, fmt, mem};
 
-use super::MAX_LEN;
+use super::{Message, MAX_LEN};
 use crate::{Error, Result};
 
 mod conf_id;
@@ -178,6 +178,18 @@ impl From<MessageData> for Vec<u8> {
             .chain(val.message_code.to_bytes())
             .chain(val.additional)
             .collect()
+    }
+}
+
+impl From<&MessageData> for Message {
+    fn from(val: &MessageData) -> Self {
+        Message::new().with_data(val.clone())
+    }
+}
+
+impl From<MessageData> for Message {
+    fn from(val: MessageData) -> Self {
+        Message::new().with_data(val)
     }
 }
 
