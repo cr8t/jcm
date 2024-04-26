@@ -2,6 +2,10 @@ use std::fmt;
 
 use crate::{Error, EventCode, EventType, Message, MessageCode, MessageData, MessageType, Result};
 
+mod inhibit_event;
+
+pub use inhibit_event::*;
+
 /// Represents an event [Message] sent by the device.
 #[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]

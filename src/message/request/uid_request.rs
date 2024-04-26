@@ -189,7 +189,7 @@ mod tests {
     use crate::{EventCode, EventType};
 
     #[test]
-    fn test_status_request() -> Result<()> {
+    fn test_uid_request() -> Result<()> {
         let exp_modes = [RequestMode::Get, RequestMode::Set];
         let exp_types = [
             MessageType::Request(RequestType::Status),
@@ -226,7 +226,7 @@ mod tests {
     }
 
     #[test]
-    fn test_status_request_invalid() -> Result<()> {
+    fn test_uid_request_invalid() -> Result<()> {
         let invalid_types = [MessageType::Reserved]
             .into_iter()
             .chain((0x80..=0x8f).map(|m| MessageType::Event(EventType::from_u8(m))))
