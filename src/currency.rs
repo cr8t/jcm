@@ -1,0 +1,106 @@
+use std::fmt;
+
+pub use currency_iso4217::Currency as CurrencyCode;
+
+use crate::{Denomination, Error, Result};
+
+/// Represents device currency code and denomination.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Currency {
+    code: CurrencyCode,
+    denomination: Denomination,
+}
+
+impl Currency {
+    /// Creates a new [Currency].
+    pub const fn new() -> Self {
+        Self {
+            code: CurrencyCode::JPY,
+            denomination: Denomination::new(),
+        }
+    }
+
+    /// Gets the length of the [Currency].
+    pub const fn len() -> usize {
+        CurrencyCode::LEN + Denomination::len()
+    }
+
+    /// Gets whether the [Currency] is empty.
+    pub const fn is_empty(&self) -> bool {
+        matches!(self.code, CurrencyCode::XXX) || self.denomination.is_empty()
+    }
+
+    /// Attempts to convert a byte buffer into a [Currency].
+    pub fn from_bytes(buf: &[u8]) -> Result<Self> {
+        let len = Self::len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidCurrencyLen((buf_len, len)))
+        } else {
+            match CurrencyCode::from(buf) {
+                code if code == CurrencyCode::XXX => Err(Error::InvalidCurrency((code.into(), 0))),
+                code => {
+                    let denomination = Denomination::try_from(buf[CurrencyCode::LEN..].as_ref())?;
+                    Ok(Self { code, denomination })
+                }
+            }
+        }
+    }
+
+    /// Writes the [Currency] to a byte buffer.
+    pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
+        let len = Self::len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidCurrencyLen((buf_len, len)))
+        } else {
+            buf[..CurrencyCode::LEN].copy_from_slice(<&str>::from(self.code).as_bytes());
+            self.denomination.to_bytes(&mut buf[CurrencyCode::LEN..len])
+        }
+    }
+
+    /// Converts the [Currency] into byte vector.
+    pub fn to_vec(&self) -> Vec<u8> {
+        let mut ret = [0u8; Self::len()];
+        self.to_bytes(ret.as_mut()).ok();
+        ret.into()
+    }
+}
+
+impl fmt::Display for Currency {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            r#""{} {}""#,
+            self.denomination.value(),
+            <&str>::from(self.code)
+        )
+    }
+}
+
+impl TryFrom<&[u8]> for Currency {
+    type Error = Error;
+
+    fn try_from(val: &[u8]) -> Result<Self> {
+        Self::from_bytes(val)
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8; N]> for Currency {
+    type Error = Error;
+
+    fn try_from(val: &[u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
+    }
+}
+
+impl<const N: usize> TryFrom<[u8; N]> for Currency {
+    type Error = Error;
+
+    fn try_from(val: [u8; N]) -> Result<Self> {
+        val.as_ref().try_into()
+    }
+}

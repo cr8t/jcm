@@ -1,4 +1,5 @@
 mod bill_acceptor_state;
+mod currency;
 mod denomination;
 mod device_status;
 mod error;
@@ -8,12 +9,14 @@ mod function_status;
 mod message;
 mod reject_code;
 mod status_code;
+mod ticket;
 mod unit_number;
 mod unit_status;
 #[cfg(feature = "usb")]
 pub mod usb;
 
 pub use bill_acceptor_state::*;
+pub use currency::*;
 pub use denomination::*;
 pub use device_status::*;
 pub use error::*;
@@ -23,5 +26,6 @@ pub use function_status::*;
 pub use message::*;
 pub use reject_code::*;
 pub use status_code::*;
+pub use ticket::*;
 pub use unit_number::*;
 pub use unit_status::*;

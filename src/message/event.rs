@@ -2,8 +2,10 @@ use std::fmt;
 
 use crate::{Error, EventCode, EventType, Message, MessageCode, MessageData, MessageType, Result};
 
+mod escrow_event;
 mod inhibit_event;
 
+pub use escrow_event::*;
 pub use inhibit_event::*;
 
 /// Represents an event [Message] sent by the device.
