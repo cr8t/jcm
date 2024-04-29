@@ -122,9 +122,7 @@ mod tests {
 
     #[test]
     fn test_inhibit_event() -> Result<()> {
-        let exp_types = (0x80..=0x8fu8)
-            .into_iter()
-            .map(|e| MessageType::Event(EventType::from_u8(e)));
+        let exp_types = (0x80..=0x8fu8).map(|e| MessageType::Event(EventType::from_u8(e)));
         let exp_code = MessageCode::Event(EventCode::Inhibit);
 
         for exp_type in exp_types {

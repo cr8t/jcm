@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, mem};
 
 use crate::{Error, Result};
 
@@ -121,6 +121,21 @@ impl RejectCode {
     /// Converts a [RejectCode] into a [`u8`].
     pub const fn into_u8(self) -> u8 {
         self as u8
+    }
+
+    /// Gets the length of the [RejectCode].
+    pub const fn len() -> usize {
+        mem::size_of::<u8>()
+    }
+
+    /// Gets whether the [RejectCode] is empty.
+    pub const fn is_empty(&self) -> bool {
+        matches!(self, Self::Reserved)
+    }
+
+    /// Gets whether the [RejectCode] contains a valid variant.
+    pub const fn is_valid(&self) -> bool {
+        !self.is_empty()
     }
 }
 
