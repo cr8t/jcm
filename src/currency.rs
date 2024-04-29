@@ -21,6 +21,38 @@ impl Currency {
         }
     }
 
+    /// Gets the [CurrencyCode] for the [Currency].
+    pub const fn code(&self) -> CurrencyCode {
+        self.code
+    }
+
+    /// Sets the [CurrencyCode] for the [Currency].
+    pub fn set_code(&mut self, code: CurrencyCode) {
+        self.code = code;
+    }
+
+    /// Builder function that sets the [CurrencyCode] for the [Currency].
+    pub fn with_code(mut self, code: CurrencyCode) -> Self {
+        self.set_code(code);
+        self
+    }
+
+    /// Gets the [Denomination] for the [Currency].
+    pub const fn denomination(&self) -> Denomination {
+        self.denomination
+    }
+
+    /// Sets the [Denomination] for the [Currency].
+    pub fn set_denomination(&mut self, denomination: Denomination) {
+        self.denomination = denomination;
+    }
+
+    /// Builder function that sets the [Denomination] for the [Currency].
+    pub fn with_denomination(mut self, denomination: Denomination) -> Self {
+        self.set_denomination(denomination);
+        self
+    }
+
     /// Gets the length of the [Currency].
     pub const fn len() -> usize {
         CurrencyCode::LEN + Denomination::len()
