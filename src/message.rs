@@ -273,11 +273,9 @@ mod tests {
             let msg = Message::try_from(raw.as_slice())?;
             print!("{msg}");
 
-            if i != raw_msgs.len() - 1 {
-                println!(", ");
-            } else {
-                println!("");
-            }
+            let sep = if i != raw_msgs.len() - 1 { ", " } else { "" };
+
+            println!("{sep}");
         }
         println!("]");
 

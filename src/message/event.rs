@@ -4,9 +4,11 @@ use crate::{Error, EventCode, EventType, Message, MessageCode, MessageData, Mess
 
 mod escrow_event;
 mod inhibit_event;
+mod rejected_event;
 
 pub use escrow_event::*;
 pub use inhibit_event::*;
+pub use rejected_event::*;
 
 /// Represents an event [Message] sent by the device.
 #[repr(C)]
