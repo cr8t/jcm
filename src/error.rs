@@ -37,6 +37,14 @@ pub enum Error {
     InvalidRequestType(u8),
     InvalidEventType(u8),
     InvalidMessage(((u8, u16), (u8, u16))),
+    InvalidEscrowData,
+    InvalidCurrency((u32, u16)),
+    InvalidEscrowDataLen((usize, usize)),
+    InvalidCurrencyLen((usize, usize)),
+    InvalidDenominationLen((usize, usize)),
+    InvalidTicketLen((usize, usize)),
+    InvalidAsciiString,
+    InvalidUtf8String,
     #[cfg(feature = "usb")]
     Usb(String),
 }
@@ -130,6 +138,33 @@ impl fmt::Display for Error {
             Self::InvalidMessage(((have_type, have_code), (exp_type, exp_code))) => {
                 write!(f, "invalid message, have: {have_type} - {have_code}, expected: {exp_type} - {exp_code}")
             }
+            Self::InvalidEscrowData => write!(f, "invalid escrow data"),
+            Self::InvalidCurrency((code, denom)) => {
+                write!(
+                    f,
+                    r#"invalid currency: {{"code": {code}, "denomination": {denom}}}"#
+                )
+            }
+            Self::InvalidEscrowDataLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid escrow data length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidCurrencyLen((have, exp)) => {
+                write!(f, "invalid currency length, have: {have}, expected: {exp}")
+            }
+            Self::InvalidDenominationLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid denomination length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidTicketLen((have, exp)) => {
+                write!(f, "invalid ticket length, have: {have}, expected: {exp}")
+            }
+            Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),
+            Self::InvalidUtf8String => write!(f, "invalid UTF-8 encoded string"),
             #[cfg(feature = "usb")]
             Self::Usb(err) => write!(f, "USB error: {err}"),
         }

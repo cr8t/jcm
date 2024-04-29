@@ -1,30 +1,10 @@
 use std::{cmp, fmt, mem};
 
 use crate::{Error, Result};
-pub use currency_iso4217::Currency as CurrencyCode;
 
 const DENOM_INT_SHIFT: u8 = 8;
 const DENOM_EXP_MAX: u32 = 19;
 const DENOM_BASE: u64 = 10;
-
-/// Represents device currency code and denomination.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Currency {
-    code: CurrencyCode,
-    denomination: Denomination,
-}
-
-impl fmt::Display for Currency {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            r#""{} {}""#,
-            self.denomination.value(),
-            <&str>::from(self.code)
-        )
-    }
-}
 
 /// Represents the currency denomination.
 ///
@@ -123,6 +103,16 @@ impl Denomination {
         matches!(self.integer(), 1 | 2 | 5 | 10 | 20 | 50 | 100 | 200 | 250)
     }
 
+    /// Converts the [Denomination] to a [`u16`].
+    pub const fn to_u16(&self) -> u16 {
+        self.0
+    }
+
+    /// Converts the [Denomination] to a [`u16`].
+    pub const fn into_u16(self) -> u16 {
+        self.0
+    }
+
     /// Infallible function to convert a byte buffer into a [Denomination].
     pub fn from_bytes(val: &[u8]) -> Self {
         match val.len() {
@@ -137,6 +127,19 @@ impl Denomination {
         [1, 2, 5, 10, 20, 50, 100, 200, 250]
             .into_iter()
             .any(|v| val % v == 0 && (val <= 10 || val % 10 == 0))
+    }
+
+    /// Writes the [Denomination] to a byte buffer.
+    pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
+        let len = Self::len();
+        let buf_len = buf.len();
+
+        if buf_len < len {
+            Err(Error::InvalidDenominationLen((buf_len, len)))
+        } else {
+            buf.copy_from_slice(self.to_u16().to_be_bytes().as_ref());
+            Ok(())
+        }
     }
 }
 
