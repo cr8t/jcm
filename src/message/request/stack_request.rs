@@ -12,13 +12,13 @@ pub use stack_status_change::*;
 /// Represents the additional data in a stack request.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct StackRequestData {
+pub struct StackRequest {
     stack_box: Option<UnitNumber>,
     status_change: Option<StackStatusChange>,
 }
 
-impl StackRequestData {
-    /// Creates a new [StackRequestData].
+impl StackRequest {
+    /// Creates a new [StackRequest].
     pub const fn new() -> Self {
         Self {
             stack_box: None,
@@ -26,7 +26,7 @@ impl StackRequestData {
         }
     }
 
-    /// Gets the length of the [StackRequestData].
+    /// Gets the length of the [StackRequest].
     pub const fn len(&self) -> usize {
         match (self.stack_box, self.status_change) {
             (Some(_sb), None) => UnitNumber::len(),
@@ -36,7 +36,7 @@ impl StackRequestData {
         }
     }
 
-    /// Gets whether the [StackRequestData] is empty.
+    /// Gets whether the [StackRequest] is empty.
     pub const fn is_empty(&self) -> bool {
         self.stack_box.is_none() && self.status_change.is_none()
     }
@@ -83,7 +83,7 @@ impl StackRequestData {
         self.status_change.take()
     }
 
-    /// Converts a byte buffer into a [StackRequestData].
+    /// Converts a byte buffer into a [StackRequest].
     pub fn from_bytes(buf: &[u8]) -> Result<Self> {
         match buf.len() {
             0 => Ok(Self::new()),
@@ -98,13 +98,13 @@ impl StackRequestData {
         }
     }
 
-    /// Writes the [StackRequestData] to a byte buffer.
+    /// Writes the [StackRequest] to a byte buffer.
     pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
         let len = self.len();
         let buf_len = buf.len();
 
         if buf_len < len {
-            Err(Error::InvalidStackRequestDataLen((buf_len, len)))
+            Err(Error::InvalidStackRequestLen((buf_len, len)))
         } else {
             match (self.stack_box, self.status_change) {
                 (Some(sb), None) if sb.is_valid() => buf[0] = sb.to_u8(),
@@ -122,7 +122,7 @@ impl StackRequestData {
         }
     }
 
-    /// Converts the [StackRequestData] to a byte vector.
+    /// Converts the [StackRequest] to a byte vector.
     pub fn as_bytes(&self) -> Vec<u8> {
         let len = self.len();
         match len {
@@ -135,14 +135,14 @@ impl StackRequestData {
         }
     }
 
-    /// Converts the [StackRequestData] to a byte vector.
+    /// Converts the [StackRequest] to a byte vector.
     pub fn into_bytes(self) -> Vec<u8> {
         self.as_bytes()
     }
 }
 
-impl From<StackRequestData> for MessageData {
-    fn from(val: StackRequestData) -> Self {
+impl From<StackRequest> for MessageData {
+    fn from(val: StackRequest) -> Self {
         Self::new()
             .with_conf_id(ConfId::Acceptor)
             .with_message_type(MessageType::Request(RequestType::Operation))
@@ -151,8 +151,8 @@ impl From<StackRequestData> for MessageData {
     }
 }
 
-impl From<&StackRequestData> for MessageData {
-    fn from(val: &StackRequestData) -> Self {
+impl From<&StackRequest> for MessageData {
+    fn from(val: &StackRequest) -> Self {
         Self::new()
             .with_conf_id(ConfId::Acceptor)
             .with_message_type(MessageType::Request(RequestType::Operation))
@@ -161,19 +161,19 @@ impl From<&StackRequestData> for MessageData {
     }
 }
 
-impl From<StackRequestData> for Message {
-    fn from(val: StackRequestData) -> Self {
+impl From<StackRequest> for Message {
+    fn from(val: StackRequest) -> Self {
         Self::new().with_data(val.into())
     }
 }
 
-impl From<&StackRequestData> for Message {
-    fn from(val: &StackRequestData) -> Self {
+impl From<&StackRequest> for Message {
+    fn from(val: &StackRequest) -> Self {
         Self::new().with_data(val.into())
     }
 }
 
-impl TryFrom<&MessageData> for StackRequestData {
+impl TryFrom<&MessageData> for StackRequest {
     type Error = Error;
 
     fn try_from(val: &MessageData) -> Result<Self> {
@@ -195,7 +195,7 @@ impl TryFrom<&MessageData> for StackRequestData {
     }
 }
 
-impl TryFrom<MessageData> for StackRequestData {
+impl TryFrom<MessageData> for StackRequest {
     type Error = Error;
 
     fn try_from(val: MessageData) -> Result<Self> {
@@ -203,7 +203,7 @@ impl TryFrom<MessageData> for StackRequestData {
     }
 }
 
-impl TryFrom<&Message> for StackRequestData {
+impl TryFrom<&Message> for StackRequest {
     type Error = Error;
 
     fn try_from(val: &Message) -> Result<Self> {
@@ -211,7 +211,7 @@ impl TryFrom<&Message> for StackRequestData {
     }
 }
 
-impl TryFrom<Message> for StackRequestData {
+impl TryFrom<Message> for StackRequest {
     type Error = Error;
 
     fn try_from(val: Message) -> Result<Self> {
@@ -219,7 +219,7 @@ impl TryFrom<Message> for StackRequestData {
     }
 }
 
-impl fmt::Display for StackRequestData {
+impl fmt::Display for StackRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
         match (self.stack_box.as_ref(), self.status_change.as_ref()) {
@@ -245,7 +245,7 @@ mod tests {
     use crate::{EventCode, EventType, RequestCode, RequestType};
 
     #[test]
-    fn test_stack_request_data() -> Result<()> {
+    fn test_stack_request() -> Result<()> {
         let msg_data = MessageData::new()
             .with_conf_id(ConfId::Acceptor)
             .with_message_type(MessageType::Request(RequestType::Operation))
@@ -257,7 +257,7 @@ mod tests {
         ] {
             for stack_box in 0x0..=0xf {
                 let stack_data = msg_data.clone().with_additional(&[stack_box, stat_change]);
-                let stack_req = StackRequestData::try_from(stack_data)?;
+                let stack_req = StackRequest::try_from(stack_data)?;
 
                 assert_eq!(stack_req.stack_box(), Some(UnitNumber::from_u8(stack_box)));
                 assert_eq!(
@@ -267,7 +267,7 @@ mod tests {
             }
         }
 
-        let stack_req = StackRequestData::try_from(msg_data)?;
+        let stack_req = StackRequest::try_from(msg_data)?;
 
         assert!(stack_req.stack_box().is_none());
         assert!(stack_req.status_change().is_none());
@@ -276,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn test_stack_request_data_invalid() -> Result<()> {
+    fn test_stack_request_invalid() -> Result<()> {
         let msg_data = MessageData::new()
             .with_conf_id(ConfId::Acceptor)
             .with_message_type(MessageType::Request(RequestType::Operation))
@@ -285,7 +285,7 @@ mod tests {
         for stat_change in 0x2..=0xff {
             for stack_box in 0x0..=0xff {
                 let stack_data = msg_data.clone().with_additional(&[stack_box, stat_change]);
-                assert!(StackRequestData::try_from(stack_data).is_err());
+                assert!(StackRequest::try_from(stack_data).is_err());
             }
         }
 
@@ -302,7 +302,7 @@ mod tests {
             )
         {
             let stack_data = msg_data.clone().with_message_type(msg_type);
-            assert!(StackRequestData::try_from(stack_data).is_err());
+            assert!(StackRequest::try_from(stack_data).is_err());
         }
 
         for msg_code in [
@@ -371,7 +371,7 @@ mod tests {
             .map(MessageCode::Event),
         ) {
             let stack_data = msg_data.clone().with_message_code(msg_code);
-            assert!(StackRequestData::try_from(stack_data).is_err());
+            assert!(StackRequest::try_from(stack_data).is_err());
         }
 
         Ok(())
