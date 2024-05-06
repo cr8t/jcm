@@ -139,6 +139,13 @@ fn test_full_startup() -> Result<()> {
 
     log::info!("Idle response: {res}");
 
+    let req: jcm::Message = jcm::MessageData::from(jcm::InhibitRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+
+    log::info!("Inhibit response: {res}");
+
     stop.store(true, Ordering::SeqCst);
 
     Ok(())
