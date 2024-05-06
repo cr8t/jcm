@@ -132,12 +132,9 @@ fn test_full_startup() -> Result<()> {
 
     thread::sleep(time::Duration::from_millis(5000));
 
-    let idle_data = jcm::MessageData::new()
+    let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
         .with_uid(1)
-        .with_message_type(jcm::MessageType::Request(jcm::RequestType::Operation))
-        .with_message_code(jcm::MessageCode::Request(jcm::RequestCode::Idle));
-
-    let req = jcm::Message::from(idle_data);
+        .into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("Idle response: {res}");
