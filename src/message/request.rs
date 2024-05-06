@@ -8,6 +8,7 @@ use crate::{
 
 mod idle_request;
 mod inhibit_request;
+mod reject_request;
 mod request_mode;
 mod reset_request;
 mod stack_request;
@@ -16,6 +17,7 @@ mod uid_request;
 
 pub use idle_request::*;
 pub use inhibit_request::*;
+pub use reject_request::*;
 pub use request_mode::*;
 pub use reset_request::*;
 pub use stack_request::*;
