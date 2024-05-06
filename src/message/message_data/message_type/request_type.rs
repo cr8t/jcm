@@ -82,6 +82,12 @@ impl From<RequestType> for &'static str {
     }
 }
 
+impl Default for RequestType {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for RequestType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, r#""{}""#, <&str>::from(self))

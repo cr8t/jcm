@@ -147,6 +147,12 @@ impl TryFrom<Message> for EscrowEvent {
     }
 }
 
+impl Default for EscrowEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

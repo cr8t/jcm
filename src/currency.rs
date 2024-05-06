@@ -102,6 +102,12 @@ impl Currency {
     }
 }
 
+impl Default for Currency {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Currency {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(

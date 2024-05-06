@@ -112,6 +112,12 @@ impl From<&MessageType> for u8 {
     }
 }
 
+impl Default for MessageType {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for MessageType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

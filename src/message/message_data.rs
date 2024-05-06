@@ -225,6 +225,12 @@ impl TryFrom<&[u8]> for MessageData {
     }
 }
 
+impl Default for MessageData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for MessageData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;

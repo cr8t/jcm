@@ -175,6 +175,12 @@ impl TryFrom<Message> for RejectedEvent {
     }
 }
 
+impl Default for RejectedEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

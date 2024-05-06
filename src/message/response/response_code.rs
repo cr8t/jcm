@@ -112,6 +112,12 @@ impl From<ResponseCode> for &'static str {
     }
 }
 
+impl Default for ResponseCode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for ResponseCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, r#""{}""#, <&str>::from(self))

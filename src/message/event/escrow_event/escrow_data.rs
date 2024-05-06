@@ -111,3 +111,9 @@ impl<const N: usize> TryFrom<[u8; N]> for EscrowData {
         val.as_ref().try_into()
     }
 }
+
+impl Default for EscrowData {
+    fn default() -> Self {
+        Self::new()
+    }
+}

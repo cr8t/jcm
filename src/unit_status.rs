@@ -126,6 +126,12 @@ impl<const N: usize> TryFrom<[u8; N]> for UnitStatus {
     }
 }
 
+impl Default for UnitStatus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for UnitStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
@@ -228,6 +234,12 @@ impl fmt::Display for UnitStatusList {
             write!(f, "{unit}")?;
         }
         write!(f, "]")
+    }
+}
+
+impl Default for UnitStatusList {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

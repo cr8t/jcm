@@ -149,6 +149,12 @@ impl TryFrom<RawMessageCode> for MessageCode {
     }
 }
 
+impl Default for MessageCode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for MessageCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

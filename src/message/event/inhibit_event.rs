@@ -115,6 +115,12 @@ impl TryFrom<Message> for InhibitEvent {
     }
 }
 
+impl Default for InhibitEvent {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

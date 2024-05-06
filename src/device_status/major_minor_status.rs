@@ -241,6 +241,12 @@ impl From<MajorMinorStatus> for &'static str {
     }
 }
 
+impl Default for MajorMinorStatus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for MajorMinorStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
