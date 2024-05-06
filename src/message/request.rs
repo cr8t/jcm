@@ -6,12 +6,14 @@ use crate::{
     Error, Message, MessageCode, MessageData, MessageType, RequestCode, RequestType, Result,
 };
 
+mod idle_request;
 mod request_mode;
 mod reset_request;
 mod stack_request;
 mod status_request;
 mod uid_request;
 
+pub use idle_request::*;
 pub use request_mode::*;
 pub use reset_request::*;
 pub use stack_request::*;
