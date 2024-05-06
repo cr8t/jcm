@@ -122,6 +122,12 @@ impl From<&UnitNumber> for u8 {
     }
 }
 
+impl Default for UnitNumber {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for UnitNumber {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;

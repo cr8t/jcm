@@ -134,6 +134,12 @@ impl From<EventType> for &'static str {
     }
 }
 
+impl Default for EventType {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for EventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, r#""{}""#, <&str>::from(self))

@@ -242,6 +242,12 @@ impl TryFrom<Message> for StackRequest {
     }
 }
 
+impl Default for StackRequest {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for StackRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;

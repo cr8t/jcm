@@ -141,6 +141,12 @@ impl TryFrom<Message> for Response {
     }
 }
 
+impl Default for Response {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Response {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;

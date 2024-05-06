@@ -1,4 +1,4 @@
-use std::mem;
+use std::{fmt, mem};
 
 use crate::{Error, Result};
 
@@ -42,6 +42,12 @@ impl TicketMetadata {
     /// Converts the [TicketMetadata] to a byte array.
     pub fn to_bytes(self) -> [u8; 3] {
         [0, 0, self.ticket_len]
+    }
+}
+
+impl Default for TicketMetadata {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -175,5 +181,17 @@ impl<const N: usize> TryFrom<[u8; N]> for Ticket {
 
     fn try_from(val: [u8; N]) -> Result<Self> {
         val.as_ref().try_into()
+    }
+}
+
+impl Default for Ticket {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl fmt::Display for Ticket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, self.code())
     }
 }

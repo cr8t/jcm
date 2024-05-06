@@ -184,6 +184,12 @@ impl From<Event> for Message {
     }
 }
 
+impl Default for Event {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
