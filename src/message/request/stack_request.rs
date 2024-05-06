@@ -83,6 +83,26 @@ impl StackRequest {
         self.status_change.take()
     }
 
+    /// Gets the [MessageType] for the [StackRequest].
+    pub const fn message_type(&self) -> MessageType {
+        MessageType::Request(self.request_type())
+    }
+
+    /// Gets the [RequestType] for the [StackRequest].
+    pub const fn request_type(&self) -> RequestType {
+        RequestType::Operation
+    }
+
+    /// Gets the [MessageCode] for the [StackRequest].
+    pub const fn message_code(&self) -> MessageCode {
+        MessageCode::Request(self.request_code())
+    }
+
+    /// Gets the [RequestCode] for the [StackRequest].
+    pub const fn request_code(&self) -> RequestCode {
+        RequestCode::Stack
+    }
+
     /// Converts a byte buffer into a [StackRequest].
     pub fn from_bytes(buf: &[u8]) -> Result<Self> {
         match buf.len() {
@@ -177,17 +197,20 @@ impl TryFrom<&MessageData> for StackRequest {
     type Error = Error;
 
     fn try_from(val: &MessageData) -> Result<Self> {
+        let exp_type = MessageType::Request(RequestType::Operation);
+        let exp_code = MessageCode::Request(RequestCode::Stack);
+
+        let msg_type = val.message_type();
+        let msg_code = val.message_code();
+
         if val.conf_id().is_empty() {
             Err(Error::InvalidConfId(val.conf_id().into()))
-        } else if !matches!(
-            val.message_type(),
-            MessageType::Request(RequestType::Operation)
-        ) {
-            Err(Error::InvalidMessageType(val.message_type().into()))
-        } else if !matches!(val.message_code(), MessageCode::Request(RequestCode::Stack)) {
+        } else if msg_type != exp_type {
+            Err(Error::InvalidMessageType(msg_type.into()))
+        } else if msg_code != exp_code {
             Err(Error::InvalidMessageCode((
-                val.message_code().into(),
-                MessageCode::Request(RequestCode::Stack).into(),
+                msg_code.into(),
+                exp_code.into(),
             )))
         } else {
             Self::from_bytes(val.additional())
@@ -222,19 +245,23 @@ impl TryFrom<Message> for StackRequest {
 impl fmt::Display for StackRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
+        write!(f, r#""message_type": {}, "#, self.message_type())?;
+        write!(f, r#""message_code": {} "#, self.message_code())?;
+
         match (self.stack_box.as_ref(), self.status_change.as_ref()) {
             (Some(sb), Some(sc)) => {
-                write!(f, r#""stack_box": {sb}, "#)?;
+                write!(f, r#", "stack_box": {sb}, "#)?;
                 write!(f, r#""status_change": {sc}"#)?;
             }
             (Some(sb), None) => {
-                write!(f, r#""stack_box": {sb}"#)?;
+                write!(f, r#", "stack_box": {sb}"#)?;
             }
             (None, Some(sc)) => {
-                write!(f, r#""status_change": {sc}"#)?;
+                write!(f, r#", "status_change": {sc}"#)?;
             }
             _ => (),
         }
+
         write!(f, "}}")
     }
 }
@@ -302,7 +329,10 @@ mod tests {
             )
         {
             let stack_data = msg_data.clone().with_message_type(msg_type);
-            assert!(StackRequest::try_from(stack_data).is_err());
+            assert!(
+                StackRequest::try_from(stack_data).is_err(),
+                "message type: {msg_type}"
+            );
         }
 
         for msg_code in [
