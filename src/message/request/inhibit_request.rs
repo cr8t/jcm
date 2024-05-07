@@ -20,7 +20,7 @@ impl InhibitRequest {
 
     /// Gets the [RequestType] for the [InhibitRequest].
     pub const fn request_type(&self) -> RequestType {
-        RequestType::SetFeature
+        RequestType::Operation
     }
 
     /// Gets the [MessageCode] for the [InhibitRequest].
@@ -87,7 +87,7 @@ impl TryFrom<&MessageData> for InhibitRequest {
 
     fn try_from(val: &MessageData) -> Result<Self> {
         let (exp_type, exp_code) = (
-            MessageType::Request(RequestType::SetFeature),
+            MessageType::Request(RequestType::Operation),
             MessageCode::Request(RequestCode::Inhibit),
         );
 
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_inhibit_request() -> Result<()> {
-        let exp_type = MessageType::Request(RequestType::SetFeature);
+        let exp_type = MessageType::Request(RequestType::Operation);
         let exp_code = MessageCode::Request(RequestCode::Inhibit);
 
         let msg_data = MessageData::new()
@@ -145,7 +145,7 @@ mod tests {
             .chain((0x80..=0x8f).map(|m| MessageType::Event(EventType::from_u8(m))))
             .chain(
                 [
-                    RequestType::Operation,
+                    RequestType::SetFeature,
                     RequestType::Status,
                     RequestType::Reserved,
                 ]
