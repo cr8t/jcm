@@ -130,6 +130,13 @@ fn test_full_startup() -> Result<()> {
 
     log::info!("Status response: {res}");
 
+    let req: jcm::Message = jcm::MessageData::from(jcm::VersionRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+
+    log::info!("Version response: {res}");
+
     thread::sleep(time::Duration::from_millis(5000));
 
     let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
@@ -138,13 +145,6 @@ fn test_full_startup() -> Result<()> {
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("Idle response: {res}");
-
-    let req: jcm::Message = jcm::MessageData::from(jcm::InhibitRequest::new())
-        .with_uid(1)
-        .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
-
-    log::info!("Inhibit response: {res}");
 
     stop.store(true, Ordering::SeqCst);
 
