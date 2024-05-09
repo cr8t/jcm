@@ -133,7 +133,8 @@ fn test_full_startup() -> Result<()> {
     let req: jcm::Message = jcm::MessageData::from(jcm::VersionRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::VersionResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Version response: {res}");
 

@@ -43,8 +43,12 @@ pub enum Error {
     InvalidCurrencyLen((usize, usize)),
     InvalidDenominationLen((usize, usize)),
     InvalidTicketLen((usize, usize)),
+    InvalidFirmwareVersionLen((usize, usize)),
+    InvalidVersionResponseLen((usize, usize)),
+    InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
+    InvalidFirmwareVersion,
     #[cfg(feature = "usb")]
     Usb(String),
 }
@@ -163,11 +167,37 @@ impl fmt::Display for Error {
             Self::InvalidTicketLen((have, exp)) => {
                 write!(f, "invalid ticket length, have: {have}, expected: {exp}")
             }
+            Self::InvalidFirmwareVersionLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid firmware version length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidVersionResponseLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid version response length, have: {have}, expected: {exp}"
+                )
+            }
             Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),
+            Self::InvalidCString => write!(f, "invalid null-terminated C string"),
             Self::InvalidUtf8String => write!(f, "invalid UTF-8 encoded string"),
+            Self::InvalidFirmwareVersion => write!(f, "invalid firmware version"),
             #[cfg(feature = "usb")]
             Self::Usb(err) => write!(f, "USB error: {err}"),
         }
+    }
+}
+
+impl From<std::ffi::FromBytesUntilNulError> for Error {
+    fn from(_err: std::ffi::FromBytesUntilNulError) -> Self {
+        Self::InvalidCString
+    }
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(_err: std::str::Utf8Error) -> Self {
+        Self::InvalidUtf8String
     }
 }
 

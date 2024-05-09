@@ -49,6 +49,11 @@ impl ResponseCode {
         }
     }
 
+    /// Converts a [ResponseCode] into a [`u8`].
+    pub const fn to_u8(&self) -> u8 {
+        *self as u8
+    }
+
     /// Gets the length of the [ResponseCode].
     pub const fn len() -> usize {
         mem::size_of::<u8>()
