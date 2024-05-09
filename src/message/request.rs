@@ -14,6 +14,7 @@ mod reset_request;
 mod stack_request;
 mod status_request;
 mod uid_request;
+mod version_request;
 
 pub use idle_request::*;
 pub use inhibit_request::*;
@@ -23,6 +24,7 @@ pub use reset_request::*;
 pub use stack_request::*;
 pub use status_request::*;
 pub use uid_request::*;
+pub use version_request::*;
 
 /// Represents an event [Message] sent by the device.
 #[repr(C)]
