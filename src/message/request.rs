@@ -6,6 +6,7 @@ use crate::{
     Error, Message, MessageCode, MessageData, MessageType, RequestCode, RequestType, Result,
 };
 
+mod collect_request;
 mod idle_request;
 mod inhibit_request;
 mod reject_request;
@@ -16,6 +17,7 @@ mod status_request;
 mod uid_request;
 mod version_request;
 
+pub use collect_request::*;
 pub use idle_request::*;
 pub use inhibit_request::*;
 pub use reject_request::*;
