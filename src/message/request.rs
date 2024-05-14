@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod collect_request;
+mod hold_request;
 mod idle_request;
 mod inhibit_request;
 mod reject_request;
@@ -18,6 +19,7 @@ mod uid_request;
 mod version_request;
 
 pub use collect_request::*;
+pub use hold_request::*;
 pub use idle_request::*;
 pub use inhibit_request::*;
 pub use reject_request::*;
