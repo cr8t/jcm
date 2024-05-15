@@ -11,7 +11,8 @@ pub use conf_id::*;
 pub use message_code::*;
 pub use message_type::*;
 
-const MAX_DATA_LEN: usize = MAX_LEN - MessageData::meta_len();
+/// Maximum length of the [MessageData] when converted to bytes.
+pub const MAX_DATA_LEN: usize = MAX_LEN - MessageData::meta_len();
 
 /// Represents message data for JCM host-device communication.
 #[repr(C)]
