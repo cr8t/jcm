@@ -45,6 +45,7 @@ pub enum Error {
     InvalidTicketLen((usize, usize)),
     InvalidFirmwareVersionLen((usize, usize)),
     InvalidVersionResponseLen((usize, usize)),
+    InvalidCurrencyAssignLen((usize, usize)),
     InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
@@ -177,6 +178,12 @@ impl fmt::Display for Error {
                 write!(
                     f,
                     "invalid version response length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidCurrencyAssignLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid currency assign length, have: {have}, expected: {exp}"
                 )
             }
             Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),

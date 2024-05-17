@@ -4,6 +4,9 @@ pub use currency_iso4217::Currency as CurrencyCode;
 
 use crate::{Denomination, Error, Result};
 
+/// Represents the length in bytes of the [Currency].
+pub const CURRENCY_LEN: usize = 5;
+
 /// Represents device currency code and denomination.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -94,11 +97,19 @@ impl Currency {
         }
     }
 
+    /// Converts the [Currency] into a byte array.
+    pub fn into_bytes(&self) -> [u8; CURRENCY_LEN] {
+        let mut buf = [0u8; CURRENCY_LEN];
+        buf[..CurrencyCode::LEN].copy_from_slice(<&str>::from(self.code).as_bytes());
+        self.denomination
+            .to_bytes(&mut buf[CurrencyCode::LEN..])
+            .ok();
+        buf
+    }
+
     /// Converts the [Currency] into byte vector.
     pub fn to_vec(&self) -> Vec<u8> {
-        let mut ret = [0u8; Self::len()];
-        self.to_bytes(ret.as_mut()).ok();
-        ret.into()
+        self.into_bytes().into()
     }
 }
 
