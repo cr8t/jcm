@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod collect_request;
+mod currency_assign_request;
 mod denomination_disable_request;
 mod direction_disable_request;
 mod hold_request;
@@ -21,6 +22,7 @@ mod uid_request;
 mod version_request;
 
 pub use collect_request::*;
+pub use currency_assign_request::*;
 pub use denomination_disable_request::*;
 pub use direction_disable_request::*;
 pub use hold_request::*;

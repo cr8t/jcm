@@ -6,6 +6,9 @@ const DENOM_INT_SHIFT: u8 = 8;
 const DENOM_EXP_MAX: u32 = 19;
 const DENOM_BASE: u64 = 10;
 
+/// Represents the byte length of the [Denomination].
+pub const DENOM_LEN: usize = 2;
+
 /// Represents the currency denomination.
 ///
 /// ## Format
@@ -140,6 +143,11 @@ impl Denomination {
             buf.copy_from_slice(self.to_u16().to_be_bytes().as_ref());
             Ok(())
         }
+    }
+
+    /// Converts a [Denomination] into a byte array.
+    pub const fn into_bytes(self) -> [u8; DENOM_LEN] {
+        self.to_u16().to_be_bytes()
     }
 }
 
