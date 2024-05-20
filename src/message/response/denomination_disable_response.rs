@@ -196,10 +196,7 @@ mod tests {
             DenominationDisableResponse::from_bytes(raw.as_ref()).as_ref(),
             Ok(&exp)
         );
-        assert_eq!(
-            DenominationDisableResponse::try_from(&res).as_ref(),
-            Ok(&exp)
-        );
+        assert_eq!(&DenominationDisableResponse::from(&res), &exp);
         assert_eq!(Response::from(&exp), res);
 
         let out = exp.into_bytes();
