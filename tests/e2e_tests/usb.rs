@@ -197,15 +197,11 @@ fn test_denomination_disable() -> Result<()> {
 
     log::info!("Status response: {res}");
 
-    let req: jcm::Message = jcm::MessageData::from(jcm::ResetRequest::new())
-        .with_uid(1)
-        .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
-
     let req: jcm::Message = jcm::MessageData::from(jcm::DenominationDisableRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Denomination disable (get) response: {res}");
 
@@ -214,14 +210,16 @@ fn test_denomination_disable() -> Result<()> {
         .with_denominations(&[jcm::DenominationDisable::new().with_disable(1)])?;
 
     let req: jcm::Message = jcm::MessageData::from(dir_req).with_uid(1).into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Denomination disable (set) response: {res}");
 
     let req: jcm::Message = jcm::MessageData::from(jcm::DenominationDisableRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Denomination disable (get) response: {res}");
 
