@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// Represents variants for inhibiting a denomination direction.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -65,5 +67,26 @@ impl From<DirectionInhibit> for bool {
 impl From<&DirectionInhibit> for bool {
     fn from(val: &DirectionInhibit) -> Self {
         (*val).into()
+    }
+}
+
+impl From<DirectionInhibit> for &'static str {
+    fn from(val: DirectionInhibit) -> Self {
+        match val {
+            DirectionInhibit::Accept => "accept",
+            DirectionInhibit::Inhibit => "inhibit",
+        }
+    }
+}
+
+impl From<&DirectionInhibit> for &'static str {
+    fn from(val: &DirectionInhibit) -> Self {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for DirectionInhibit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
     }
 }

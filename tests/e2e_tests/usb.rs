@@ -290,7 +290,8 @@ fn test_direction_disable() -> Result<()> {
     let req: jcm::Message = jcm::MessageData::from(jcm::DirectionDisableRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DirectionDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Direction disable (get) response: {res}");
 
@@ -299,14 +300,16 @@ fn test_direction_disable() -> Result<()> {
         .with_direction(jcm::InhibitDirection::create(0xf));
 
     let req: jcm::Message = jcm::MessageData::from(dir_req).with_uid(1).into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DirectionDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Direction disable (set) response: {res}");
 
     let req: jcm::Message = jcm::MessageData::from(jcm::DirectionDisableRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DirectionDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Direction disable (get) response: {res}");
 

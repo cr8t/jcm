@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::DirectionInhibit;
 
 const FACE_DOWN_RIGHT_SIDE_SHIFT: u8 = 3;
@@ -108,6 +110,39 @@ impl InhibitDirection {
     pub fn with_face_up_left_side(mut self, val: DirectionInhibit) -> Self {
         self.set_face_up_left_side(val);
         self
+    }
+
+    /// Gets the length of the [InhibitDirection].
+    pub const fn len() -> usize {
+        std::mem::size_of::<u8>()
+    }
+
+    /// Gets whether the [InhibitDirection] is empty.
+    pub const fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+}
+
+impl fmt::Display for InhibitDirection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        write!(
+            f,
+            r#""face_down_right_side": {}, "#,
+            self.face_down_right_side()
+        )?;
+        write!(
+            f,
+            r#""face_down_left_side": {}, "#,
+            self.face_down_left_side()
+        )?;
+        write!(
+            f,
+            r#""face_up_right_side": {}, "#,
+            self.face_up_right_side()
+        )?;
+        write!(f, r#""face_up_left_side": {}"#, self.face_up_left_side())?;
+        write!(f, "}}")
     }
 }
 

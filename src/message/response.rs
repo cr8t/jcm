@@ -4,6 +4,7 @@ use crate::{Error, Message, Result};
 
 mod currency_assign_response;
 mod denomination_disable_response;
+mod direction_disable_response;
 mod response_code;
 mod status_response;
 mod uid_response;
@@ -11,6 +12,7 @@ mod version_response;
 
 pub use currency_assign_response::*;
 pub use denomination_disable_response::*;
+pub use direction_disable_response::*;
 pub use response_code::*;
 pub use status_response::*;
 pub use uid_response::*;
