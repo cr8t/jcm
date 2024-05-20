@@ -14,7 +14,7 @@ pub use denomination_disable_mode::*;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DenominationDisableRequest {
     mode: DenominationDisableMode,
-    denoms: Vec<DenominationDisable>,
+    denoms: DenominationDisableList,
 }
 
 impl DenominationDisableRequest {
@@ -22,7 +22,7 @@ impl DenominationDisableRequest {
     pub const fn new() -> Self {
         Self {
             mode: DenominationDisableMode::new(),
-            denoms: Vec::new(),
+            denoms: DenominationDisableList::new(),
         }
     }
 
@@ -75,7 +75,7 @@ impl DenominationDisableRequest {
 
     /// Gets the maximum number of denominations.
     pub fn max_denom_len() -> usize {
-        MAX_DATA_LEN.saturating_mul(DenominationDisable::denom_len())
+        MAX_DATA_LEN.saturating_div(DenominationDisable::denom_len())
     }
 
     /// Gets the current maximum denomination index
@@ -92,19 +92,15 @@ impl DenominationDisableRequest {
 
     /// Gets a reference to the list of [DenominationDisable] items.
     pub fn denominations(&self) -> &[DenominationDisable] {
-        self.denoms.as_ref()
+        self.denoms.items()
     }
 
     /// Sets the list of [DenominationDisable] items.
     pub fn set_denominations(&mut self, denoms: &[DenominationDisable]) -> Result<()> {
-        let denom_len = denoms
-            .len()
-            .saturating_mul(DenominationDisable::denom_len());
-        if denom_len > Self::max_denom_len() {
-            Err(Error::InvalidDenominationLen((
-                denom_len,
-                Self::max_denom_len(),
-            )))
+        let denom_len = denoms.len();
+        let max_len = Self::max_denom_len();
+        if denom_len > max_len {
+            Err(Error::InvalidDenominationLen((denom_len, max_len)))
         } else {
             self.denoms = denoms.into();
             Ok(())
@@ -144,8 +140,13 @@ impl DenominationDisableRequest {
         } else {
             let item_idx = idx / DENOM_LEN;
             let denom_idx = idx % DENOM_LEN;
+            let len = self.denoms.items().len();
 
-            self.denoms[item_idx].set(denom_idx, disable);
+            self.denoms
+                .iter_mut()
+                .nth(item_idx)
+                .ok_or(Error::InvalidDenominationLen((item_idx, len)))?
+                .set(denom_idx, disable);
 
             Ok(())
         }
@@ -231,11 +232,7 @@ impl TryFrom<&MessageData> for DenominationDisableRequest {
 
         // Be generous with data returned by the device.
         // Don't worry about data that isn't a multiple of `DenominationDisable::len()` bytes.
-        let denoms = val
-            .additional()
-            .chunks(DenominationDisable::len())
-            .map(DenominationDisable::from_bytes)
-            .collect();
+        let denoms = DenominationDisableList::from_bytes(val.additional());
 
         match (val.message_type().request_type(), val.message_code()) {
             (Ok(msg_type), msg_code)
