@@ -184,32 +184,69 @@ fn test_denomination_disable() -> Result<()> {
 
     ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
 
-    common_startup(&usb, &response_recv)?;
+    let req: jcm::Message = jcm::MessageData::from(jcm::UidRequest::new_set(0x1)).into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
-    thread::sleep(time::Duration::from_millis(5000));
+    log::info!("UID response: {res}");
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::StatusRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res = jcm::StatusResponse::try_from(&res)?;
+
+    log::info!("Status response: {res}");
 
     let req: jcm::Message = jcm::MessageData::from(jcm::DenominationDisableRequest::new())
         .with_uid(1)
         .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Denomination disable (get) response: {res}");
 
     let dir_req = jcm::DenominationDisableRequest::new()
         .with_mode(jcm::DenominationDisableMode::Set)
-        .with_denominations(&[jcm::DenominationDisable::new().with_disable(0)])?;
+        .with_denominations(&[jcm::DenominationDisable::new().with_disable(1)])?;
 
     let req: jcm::Message = jcm::MessageData::from(dir_req).with_uid(1).into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
     log::info!("Denomination disable (set) response: {res}");
 
     let req: jcm::Message = jcm::MessageData::from(jcm::DenominationDisableRequest::new())
         .with_uid(1)
         .into();
+    let res: jcm::DenominationDisableResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
+
+    log::info!("Denomination disable (get) response: {res}");
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::ResetRequest::new())
+        .with_uid(1)
+        .into();
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
-    log::info!("Direction disable (get) response: {res}");
+    log::info!("Reset response: {res}");
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::StatusRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+    let res = jcm::StatusResponse::try_from(&res)?;
+
+    log::info!("Status response: {res}");
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::VersionRequest::new())
+        .with_uid(1)
+        .into();
+    let res: jcm::VersionResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
+
+    log::info!("Version response: {res}");
+
+    thread::sleep(time::Duration::from_millis(5000));
 
     let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
         .with_uid(1)
