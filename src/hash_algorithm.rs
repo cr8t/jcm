@@ -1,5 +1,7 @@
 //! Represents `Program Signature` hash algorithm information.
 
+use std::fmt;
+
 use crate::{Error, Result};
 
 /// The raw CRC-16 `ProgramSignature` hash number.
@@ -165,6 +167,21 @@ impl TryFrom<&[u8]> for HashAlgorithm {
     }
 }
 
+impl fmt::Display for HashAlgorithm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        write!(f, r#""algorithm_number: {}, "#, self.algorithm_number())?;
+        write!(f, r#""value": ["#)?;
+        for (i, h) in self.as_bytes().iter().enumerate() {
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+            write!(f, "{h}")?;
+        }
+        write!(f, "]}}")
+    }
+}
+
 /// Represents a hash algorithm number for the program firmware signature.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -179,6 +196,19 @@ impl AlgorithmNumber {
     /// Creates a new [AlgorithmNumber].
     pub const fn new() -> Self {
         Self::Crc16
+    }
+
+    /// Gets the length of the [AlgorithmNumber].
+    pub const fn len(&self) -> usize {
+        match self {
+            Self::Reserved => 0,
+            _ => std::mem::size_of::<u8>(),
+        }
+    }
+
+    /// Gets whether the [AlgorithmNumber] is empty.
+    pub const fn is_empty(&self) -> bool {
+        matches!(self, Self::Reserved)
     }
 
     /// Infallible conversion of a [`u8`] to a [AlgorithmNumber].
@@ -223,6 +253,29 @@ impl TryFrom<u8> for AlgorithmNumber {
             Self::Reserved => Err(Error::InvalidAlgorithmNumber(val)),
             algo => Ok(algo),
         }
+    }
+}
+
+impl From<AlgorithmNumber> for &'static str {
+    fn from(val: AlgorithmNumber) -> Self {
+        match val {
+            AlgorithmNumber::Crc16 => "CRC-16",
+            AlgorithmNumber::Crc32 => "CRC-32",
+            AlgorithmNumber::Sha1 => "SHA-1",
+            AlgorithmNumber::Reserved => "reserved",
+        }
+    }
+}
+
+impl From<&AlgorithmNumber> for &'static str {
+    fn from(val: &AlgorithmNumber) -> Self {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for AlgorithmNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
     }
 }
 
