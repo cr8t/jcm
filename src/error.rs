@@ -46,6 +46,7 @@ pub enum Error {
     InvalidFirmwareVersionLen((usize, usize)),
     InvalidVersionResponseLen((usize, usize)),
     InvalidCurrencyAssignLen((usize, usize)),
+    InvalidAlgorithmNumber(u8),
     InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
@@ -185,6 +186,9 @@ impl fmt::Display for Error {
                     f,
                     "invalid currency assign length, have: {have}, expected: {exp}"
                 )
+            }
+            Self::InvalidAlgorithmNumber(err) => {
+                write!(f, "invalid algorithm number: {err:#x}")
             }
             Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),
             Self::InvalidCString => write!(f, "invalid null-terminated C string"),
