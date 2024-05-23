@@ -212,4 +212,10 @@ impl From<std::str::Utf8Error> for Error {
     }
 }
 
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(_err: std::string::FromUtf8Error) -> Self {
+        Self::InvalidUtf8String
+    }
+}
+
 impl std::error::Error for Error {}
