@@ -8,31 +8,22 @@ use smol_timeout::TimeoutExt;
 
 use crate::{Error, Message, ResponseCode, Result};
 
+mod endpoint;
+
+pub use endpoint::*;
+
 pub const JCM_VID: u16 = 0x2475;
 pub const JCM_PID: u16 = 0x0105;
 
-#[cfg(feature = "jcm-service")]
-pub const JCM_REQUEST_EP: u8 = 0x02;
-#[cfg(not(feature = "jcm-service"))]
-pub const JCM_REQUEST_EP: u8 = 0x01;
-
-#[cfg(feature = "jcm-service")]
-pub const JCM_RESPONSE_EP: u8 = (1 << 7) | 0x1;
-#[cfg(not(feature = "jcm-service"))]
-pub const JCM_RESPONSE_EP: u8 = (1 << 7) | 0x2;
-
-pub const JCM_EVENT_EP: u8 = JCM_RESPONSE_EP;
-pub const JCM_EVENT_RESPONSE_EP: u8 = JCM_REQUEST_EP;
-
 /// USB communication timeout (ms)
 pub const USB_TIMEOUT: u64 = 100;
-
-pub const MAX_PACKET_SIZE: usize = 512;
 
 /// Represents a host-side USB device handle.
 pub struct UsbDeviceHandle {
     device: nusb::Device,
     interface: nusb::Interface,
+    req_ep: Endpoint,
+    res_ep: Endpoint,
 }
 
 impl UsbDeviceHandle {
@@ -51,19 +42,19 @@ impl UsbDeviceHandle {
             .open()
             .map_err(|err| Error::Usb(format!("unable to open device: {err}")))?;
 
-        match Self::setup_device(&device) {
-            Ok(_) => {
-                let interface = device
-                    .claim_interface(1)
-                    .map_err(|err| Error::Usb(format!("unable to open main interface: {err}")))?;
+        Self::setup_device(&device).map_err(|err| {
+            log::error!("Device setup failed: {err}");
+            err
+        })?;
 
-                Ok(Self { device, interface })
-            }
-            Err(err) => {
-                log::error!("Device setup failed: {err}");
-                Err(err)
-            }
-        }
+        let (interface, req_ep, res_ep) = Self::find_interface(&device)?;
+
+        Ok(Self {
+            device,
+            interface,
+            req_ep,
+            res_ep,
+        })
     }
 
     /// Gets a reference to the USB [`Device`](nusb::Device).
@@ -80,7 +71,7 @@ impl UsbDeviceHandle {
     pub fn write_request(&self, message: &Message) -> Result<()> {
         block_on(
             self.interface
-                .bulk_out(JCM_REQUEST_EP, message.into())
+                .bulk_out(self.req_ep.address(), message.into())
                 .timeout(time::Duration::from_millis(USB_TIMEOUT)),
         )
         .ok_or(Error::Usb("write Request timeout expired".into()))?
@@ -96,10 +87,13 @@ impl UsbDeviceHandle {
 
     /// Reads the response from a JCM device.
     pub fn read_response(&self) -> Result<Message> {
-        let mut res_acc = Vec::with_capacity(MAX_PACKET_SIZE);
+        let mut res_acc = Vec::with_capacity(self.res_ep.max_packet_size());
         let mut res_buf = block_on(
             self.interface
-                .bulk_in(JCM_RESPONSE_EP, RequestBuffer::new(MAX_PACKET_SIZE))
+                .bulk_in(
+                    self.res_ep.address(),
+                    RequestBuffer::new(self.res_ep.max_packet_size()),
+                )
                 .timeout(time::Duration::from_millis(USB_TIMEOUT)),
         )
         .ok_or(Error::Usb("read Response timeout expired".into()))?
@@ -112,13 +106,13 @@ impl UsbDeviceHandle {
 
         let mut read = res_buf.len();
         res_acc.append(&mut res_buf);
-        while read == MAX_PACKET_SIZE {
+        while read == self.res_ep.max_packet_size() {
             // clear the buffer to avoid leaving old data in the trailing bytes
             res_buf = match block_on(
                 self.interface
                     .bulk_in(
-                        JCM_RESPONSE_EP,
-                        RequestBuffer::reuse(res_buf, MAX_PACKET_SIZE),
+                        self.res_ep.address(),
+                        RequestBuffer::reuse(res_buf, self.res_ep.max_packet_size()),
                     )
                     .timeout(time::Duration::from_millis(USB_TIMEOUT)),
             )
@@ -148,10 +142,13 @@ impl UsbDeviceHandle {
 
     /// Reads an event [Message] from the JCM device.
     pub fn read_event(&self) -> Result<Message> {
-        let mut res_acc = Vec::with_capacity(MAX_PACKET_SIZE);
+        let mut res_acc = Vec::with_capacity(self.res_ep.max_packet_size());
         let mut res_buf = block_on(
             self.interface
-                .bulk_in(JCM_EVENT_EP, RequestBuffer::new(MAX_PACKET_SIZE))
+                .bulk_in(
+                    self.res_ep.address(),
+                    RequestBuffer::new(self.res_ep.max_packet_size()),
+                )
                 .timeout(time::Duration::from_millis(USB_TIMEOUT)),
         )
         .ok_or(Error::Usb("read Event timeout expired".into()))?
@@ -164,11 +161,14 @@ impl UsbDeviceHandle {
 
         let mut read = res_buf.len();
         res_acc.append(&mut res_buf);
-        while read == MAX_PACKET_SIZE {
+        while read == self.res_ep.max_packet_size() {
             // clear the buffer to avoid leaving old data in the trailing bytes
             res_buf = match block_on(
                 self.interface
-                    .bulk_in(JCM_EVENT_EP, RequestBuffer::reuse(res_buf, MAX_PACKET_SIZE))
+                    .bulk_in(
+                        self.res_ep.address(),
+                        RequestBuffer::reuse(res_buf, self.res_ep.max_packet_size()),
+                    )
                     .timeout(time::Duration::from_millis(USB_TIMEOUT)),
             )
             .ok_or(Error::Usb(
@@ -199,7 +199,7 @@ impl UsbDeviceHandle {
     pub fn write_event_response(&self, message: &Message) -> Result<()> {
         block_on(
             self.interface
-                .bulk_out(JCM_EVENT_RESPONSE_EP, message.into())
+                .bulk_out(self.req_ep.address(), message.into())
                 .timeout(time::Duration::from_millis(USB_TIMEOUT)),
         )
         .ok_or(Error::Usb("write Event response timeout expired".into()))?
@@ -214,21 +214,74 @@ impl UsbDeviceHandle {
     }
 
     fn setup_device(device: &nusb::Device) -> Result<()> {
-        let _res = block_on(
+        block_on(
             device
                 .control_out(ControlOut {
                     control_type: ControlType::Class,
                     recipient: Recipient::Interface,
                     request: 0x22,
-                    value: 0,
+                    value: 0b00,
                     index: 0x0,
                     data: &[],
                 })
                 .timeout(time::Duration::from_millis(USB_TIMEOUT)),
         )
-        .ok_or(Error::Usb("device setup timeout expired".into()))?;
+        .map(|_| ())
+        .ok_or(Error::Usb("device setup timeout expired".into()))
+    }
 
-        Ok(())
+    fn find_interface(device: &nusb::Device) -> Result<(nusb::Interface, Endpoint, Endpoint)> {
+        let mut iface = None;
+        let mut req_ep = None;
+        let mut res_ep = None;
+
+        device.configurations().for_each(|cfg| {
+            cfg.interfaces().for_each(|cfg_iface| {
+                cfg_iface.alt_settings().for_each(|alt| {
+                    alt.endpoints()
+                        .for_each(|ep| match (ep.transfer_type(), ep.direction()) {
+                            (
+                                nusb::transfer::EndpointType::Bulk,
+                                nusb::transfer::Direction::Out,
+                            ) => {
+                                if iface.is_none() {
+                                    iface = Some(cfg_iface.interface_number());
+                                }
+
+                                if req_ep.is_none() {
+                                    req_ep =
+                                        Some(Endpoint::create(ep.address(), ep.max_packet_size()));
+                                }
+                            }
+                            (nusb::transfer::EndpointType::Bulk, nusb::transfer::Direction::In) => {
+                                if iface.is_none() {
+                                    iface = Some(cfg_iface.interface_number());
+                                }
+
+                                if res_ep.is_none() {
+                                    res_ep =
+                                        Some(Endpoint::create(ep.address(), ep.max_packet_size()));
+                                }
+                            }
+                            _ => (),
+                        });
+                });
+            });
+        });
+
+        let interface = device
+            .claim_interface(iface.ok_or(Error::Usb("unable to find matching interface".into()))?)
+            .map_err(|err| Error::Usb(format!("unable to open main interface: {err}")))?;
+
+        match (req_ep, res_ep) {
+            (Some(req_ep), Some(res_ep)) => Ok((interface, req_ep, res_ep)),
+            (None, _) => Err(Error::Usb(
+                "unable to find matching request endpoint".into(),
+            )),
+            (_, None) => Err(Error::Usb(
+                "unable to find matching response endpoint".into(),
+            )),
+        }
     }
 }
 
