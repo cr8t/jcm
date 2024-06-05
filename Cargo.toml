@@ -38,4 +38,3 @@ version = "0.10"
 default = ["usb"]
 usb = ["crossbeam", "nusb", "futures-lite", "smol-timeout"]
 e2e-tests = ["usb"]
-jcm-service = ["usb"]
