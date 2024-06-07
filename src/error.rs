@@ -50,6 +50,7 @@ pub enum Error {
     InvalidNearFullStatus(u8),
     InvalidNearFullDataLen((usize, usize)),
     InvalidNearFullNumberLen((usize, usize)),
+    InvalidNearFullMode(u8),
     InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
@@ -207,6 +208,9 @@ impl fmt::Display for Error {
                     f,
                     "invalid near full number length, have: {have}, expected: {exp}"
                 )
+            }
+            Self::InvalidNearFullMode(err) => {
+                write!(f, "invalid near full mode: {err:#x}")
             }
             Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),
             Self::InvalidCString => write!(f, "invalid null-terminated C string"),

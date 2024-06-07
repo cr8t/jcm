@@ -38,6 +38,11 @@ impl RequestType {
         *self as u8
     }
 
+    /// Converts the [RequestType] to a [`u8`].
+    pub const fn into_u8(self) -> u8 {
+        self as u8
+    }
+
     /// Gets the length of the [RequestType].
     pub const fn len() -> usize {
         mem::size_of::<u8>()
@@ -79,6 +84,18 @@ impl From<&RequestType> for &'static str {
 impl From<RequestType> for &'static str {
     fn from(val: RequestType) -> Self {
         (&val).into()
+    }
+}
+
+impl From<RequestType> for u8 {
+    fn from(val: RequestType) -> Self {
+        val.into_u8()
+    }
+}
+
+impl From<&RequestType> for u8 {
+    fn from(val: &RequestType) -> Self {
+        val.to_u8()
     }
 }
 
