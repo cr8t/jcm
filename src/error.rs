@@ -47,6 +47,10 @@ pub enum Error {
     InvalidVersionResponseLen((usize, usize)),
     InvalidCurrencyAssignLen((usize, usize)),
     InvalidAlgorithmNumber(u8),
+    InvalidNearFullStatus(u8),
+    InvalidNearFullDataLen((usize, usize)),
+    InvalidNearFullNumberLen((usize, usize)),
+    InvalidNearFullMode(u8),
     InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
@@ -189,6 +193,24 @@ impl fmt::Display for Error {
             }
             Self::InvalidAlgorithmNumber(err) => {
                 write!(f, "invalid algorithm number: {err:#x}")
+            }
+            Self::InvalidNearFullStatus(err) => {
+                write!(f, "invalid near full status: {err:#x}")
+            }
+            Self::InvalidNearFullDataLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid near full data length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidNearFullNumberLen((have, exp)) => {
+                write!(
+                    f,
+                    "invalid near full number length, have: {have}, expected: {exp}"
+                )
+            }
+            Self::InvalidNearFullMode(err) => {
+                write!(f, "invalid near full mode: {err:#x}")
             }
             Self::InvalidAsciiString => write!(f, "invalid ASCII encoded string"),
             Self::InvalidCString => write!(f, "invalid null-terminated C string"),
