@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{Error, Result};
 
 /// Represents the length of [NearFullStatus].
@@ -46,6 +48,27 @@ impl TryFrom<u8> for NearFullStatus {
 
     fn try_from(val: u8) -> Result<Self> {
         Self::from_u8(val).ok_or(Error::InvalidNearFullStatus(val))
+    }
+}
+
+impl From<NearFullStatus> for &'static str {
+    fn from(val: NearFullStatus) -> Self {
+        match val {
+            NearFullStatus::Disabled => "disabled",
+            NearFullStatus::Enabled => "enabled",
+        }
+    }
+}
+
+impl From<&NearFullStatus> for &'static str {
+    fn from(val: &NearFullStatus) -> Self {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for NearFullStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
     }
 }
 

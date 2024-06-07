@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{Error, Result};
 
 mod number;
@@ -82,6 +84,11 @@ impl NearFullData {
         let n = self.number.into_bytes();
         [self.status.into_u8(), n[0], n[1]]
     }
+
+    /// Gets the byte length of the [NearFullData].
+    pub const fn len() -> usize {
+        NEAR_FULL_DATA_LEN
+    }
 }
 
 impl Default for NearFullData {
@@ -120,6 +127,15 @@ impl<const N: usize> TryFrom<[u8; N]> for NearFullData {
 
     fn try_from(val: [u8; N]) -> Result<Self> {
         val.as_ref().try_into()
+    }
+}
+
+impl fmt::Display for NearFullData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        write!(f, r#""status": {}, "#, self.status)?;
+        write!(f, r#""number": {}"#, self.number)?;
+        write!(f, "}}")
     }
 }
 

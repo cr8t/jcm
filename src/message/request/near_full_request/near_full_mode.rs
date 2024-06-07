@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{Error, MessageType, RequestType, Result};
 
 /// Represents the [RequestType] modes for the [NearFullRequest].
@@ -55,5 +57,26 @@ impl From<NearFullMode> for RequestType {
 impl From<NearFullMode> for MessageType {
     fn from(val: NearFullMode) -> Self {
         MessageType::Request(val.into_request_type())
+    }
+}
+
+impl From<NearFullMode> for &'static str {
+    fn from(val: NearFullMode) -> Self {
+        match val {
+            NearFullMode::Get => "get",
+            NearFullMode::Set => "set",
+        }
+    }
+}
+
+impl From<&NearFullMode> for &'static str {
+    fn from(val: &NearFullMode) -> Self {
+        (*val).into()
+    }
+}
+
+impl fmt::Display for NearFullMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, r#""{}""#, <&str>::from(self))
     }
 }

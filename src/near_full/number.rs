@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::{Error, Result};
 
 /// Represents the length of [NearFullNumber].
@@ -81,6 +83,12 @@ impl<const N: usize> TryFrom<[u8; N]> for NearFullNumber {
 
     fn try_from(val: [u8; N]) -> Result<Self> {
         val.as_ref().try_into()
+    }
+}
+
+impl fmt::Display for NearFullNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
