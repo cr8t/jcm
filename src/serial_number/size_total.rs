@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::{Error, Result};
 
 /// Represents the image size and total block number of the Serial Number Image.
@@ -137,6 +139,15 @@ impl IntoIterator for SerialNumberSizeTotal {
 
     fn into_iter(self) -> Self::IntoIter {
         self.into_bytes().into_iter()
+    }
+}
+
+impl fmt::Display for SerialNumberSizeTotal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{")?;
+        write!(f, r#""size": {}, "#, self.size)?;
+        write!(f, r#""total_blocks": {}"#, self.total)?;
+        write!(f, "}}")
     }
 }
 
