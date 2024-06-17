@@ -26,7 +26,7 @@ impl SerialNumberBlockNumber {
 
     /// Gets whether the [SerialNumberBlockNumber] is the initial request for size and total blocks.
     pub const fn is_size_and_total_info(&self) -> bool {
-        self.0 == SIZE_AND_TOTAL 
+        self.0 == SIZE_AND_TOTAL
     }
 
     /// Converts a [`u8`] into a [SerialNumberBlockNumber].
