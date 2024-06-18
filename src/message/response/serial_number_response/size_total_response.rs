@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{Error, Response, ResponseCode, Result, SerialNumberSizeTotal};
+use crate::{Error, Message, Response, ResponseCode, Result, SerialNumberSizeTotal};
 
 /// Represents the [Response] to a UID request [Message](crate::Message).
 #[repr(C)]
@@ -54,6 +54,11 @@ impl SerialNumberSizeTotalResponse {
             code: self.code,
             size_total: val,
         }
+    }
+
+    /// Gets whether the device supports serial number images.
+    pub const fn is_supported(&self) -> bool {
+        self.size_total.is_supported()
     }
 
     /// Gets the length of the [SerialNumberSizeTotalResponse].
@@ -121,6 +126,22 @@ impl TryFrom<Response> for SerialNumberSizeTotalResponse {
 
     fn try_from(val: Response) -> Result<Self> {
         (&val).try_into()
+    }
+}
+
+impl TryFrom<&Message> for SerialNumberSizeTotalResponse {
+    type Error = Error;
+
+    fn try_from(val: &Message) -> Result<Self> {
+        Response::try_from(val)?.try_into()
+    }
+}
+
+impl TryFrom<Message> for SerialNumberSizeTotalResponse {
+    type Error = Error;
+
+    fn try_from(val: Message) -> Result<Self> {
+        Response::try_from(val)?.try_into()
     }
 }
 

@@ -79,6 +79,18 @@ impl SerialNumberSizeTotal {
         self.size != Self::UNSUPPORTED as u32 && self.total != Self::UNSUPPORTED
     }
 
+    /// Gets the average block length.
+    ///
+    /// **NOTE**: the final image data block may be smaller, since total image size may not divide
+    /// the number of blocks evenly.
+    pub const fn block_len(&self) -> usize {
+        if self.is_supported() {
+            self.size().saturating_div(self.total_blocks())
+        } else {
+            0
+        }
+    }
+
     /// Converts a byte buffer into a [SerialNumberSizeTotal].
     pub const fn from_bytes(buf: &[u8]) -> Result<Self> {
         match buf.len() {

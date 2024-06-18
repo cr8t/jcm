@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// Represents serial number image data block.
 ///
 /// Block length is variable, and is calculated as:
@@ -71,6 +73,20 @@ impl IntoIterator for SerialNumberBlock {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl fmt::Display for SerialNumberBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for (i, b) in self.iter().enumerate() {
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+
+            write!(f, "{b}")?;
+        }
+        write!(f, "]")
     }
 }
 

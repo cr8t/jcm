@@ -1,3 +1,5 @@
+use std::fmt;
+
 const SIZE_AND_TOTAL: u8 = 0;
 
 /// Represents the block number in a `Serial Number Image` request.
@@ -66,6 +68,12 @@ impl From<SerialNumberBlockNumber> for u8 {
 impl From<&SerialNumberBlockNumber> for u8 {
     fn from(val: &SerialNumberBlockNumber) -> Self {
         (*val).into()
+    }
+}
+
+impl fmt::Display for SerialNumberBlockNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
