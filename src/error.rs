@@ -51,7 +51,7 @@ pub enum Error {
     InvalidNearFullDataLen((usize, usize)),
     InvalidNearFullNumberLen((usize, usize)),
     InvalidNearFullMode(u8),
-    InvalidSerialNumberSizeTotalLen((usize, usize)),
+    InvalidImageSizeLen((usize, usize)),
     InvalidCString,
     InvalidAsciiString,
     InvalidUtf8String,
@@ -213,7 +213,7 @@ impl fmt::Display for Error {
             Self::InvalidNearFullMode(err) => {
                 write!(f, "invalid near full mode: {err:#x}")
             }
-            Self::InvalidSerialNumberSizeTotalLen((have, exp)) => {
+            Self::InvalidImageSizeLen((have, exp)) => {
                 write!(
                     f,
                     "invalid serial number size total length, have: {have}, expected: {exp}"

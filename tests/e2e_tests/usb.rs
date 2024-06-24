@@ -556,18 +556,27 @@ fn test_serial_number() -> Result<()> {
 
     ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
 
+    common_startup(&usb, &response_recv)?;
+
+    thread::sleep(time::Duration::from_millis(5000));
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+
+    log::info!("Idle response: {res}");
+
     let req: jcm::Message = jcm::MessageData::from(jcm::SerialNumberRequest::new())
         .with_uid(1)
         .into();
-    let res: jcm::SerialNumberSizeTotalResponse =
+    let res: jcm::SerialNumberSizeResponse =
         jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
-    log::info!("Serial Number Size/Total response: {res}");
+    log::info!("Serial Number Size response: {res}");
 
     if res.is_supported() {
-        for block in
-            (1..res.size_total().total_blocks() as u8).map(jcm::SerialNumberBlockNumber::from)
-        {
+        for block in (1..res.size_total().total_blocks() as u8).map(jcm::ImageBlockNumber::from) {
             let req: jcm::Message =
                 jcm::MessageData::from(jcm::SerialNumberRequest::new().with_block_number(block))
                     .with_uid(1)
@@ -580,6 +589,34 @@ fn test_serial_number() -> Result<()> {
         }
     }
 
+    stop.store(true, Ordering::SeqCst);
+
+    Ok(())
+}
+
+#[test]
+fn test_note_image() -> Result<()> {
+    let _lock = common::init()?;
+
+    let usb = Arc::new(Mutex::new(jcm::usb::UsbDeviceHandle::find_usb()?));
+    let stop = Arc::new(AtomicBool::new(false));
+
+    let (event_send, event_recv) = crossbeam::channel::unbounded();
+    let (response_send, response_recv) = crossbeam::channel::unbounded();
+    let (event_res_send, event_res_recv) = crossbeam::channel::unbounded();
+
+    jcm::usb::poll_device_message(
+        Arc::clone(&usb),
+        Arc::clone(&stop),
+        event_send,
+        event_res_recv,
+        response_send,
+    )?;
+
+    jcm::usb::wait_for_power_up(&event_recv, &event_res_send).ok();
+
+    ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
+
     common_startup(&usb, &response_recv)?;
 
     thread::sleep(time::Duration::from_millis(5000));
@@ -590,6 +627,28 @@ fn test_serial_number() -> Result<()> {
     let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
 
     log::info!("Idle response: {res}");
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::NoteImageRequest::new())
+        .with_uid(1)
+        .into();
+    let res: jcm::NoteImageSizeResponse =
+        jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
+
+    log::info!("Note Image size response: {res}");
+
+    if res.is_supported() {
+        for block in (1..res.size_total().total_blocks() as u8).map(jcm::ImageBlockNumber::from) {
+            let req: jcm::Message =
+                jcm::MessageData::from(jcm::NoteImageRequest::new().with_block_number(block))
+                    .with_uid(1)
+                    .into();
+
+            let res: jcm::NoteImageBlockResponse =
+                jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
+
+            log::info!("Note Image block[{block}] response: {res}");
+        }
+    }
 
     stop.store(true, Ordering::SeqCst);
 

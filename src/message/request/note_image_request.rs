@@ -6,39 +6,39 @@ use crate::{
 /// Represents a `Serial Number Image` request message.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct SerialNumberRequest {
+pub struct NoteImageRequest {
     block_number: ImageBlockNumber,
 }
 
-impl SerialNumberRequest {
-    /// Creates a new [SerialNumberRequest].
+impl NoteImageRequest {
+    /// Creates a new [NoteImageRequest].
     pub const fn new() -> Self {
         Self {
             block_number: ImageBlockNumber::new(),
         }
     }
 
-    /// Gets the [MessageType] for the [SerialNumberRequest].
+    /// Gets the [MessageType] for the [NoteImageRequest].
     pub const fn message_type(&self) -> MessageType {
         MessageType::Request(self.request_type())
     }
 
-    /// Gets the [RequestType] for the [SerialNumberRequest].
+    /// Gets the [RequestType] for the [NoteImageRequest].
     pub const fn request_type(&self) -> RequestType {
         RequestType::Status
     }
 
-    /// Gets the [MessageCode] for the [SerialNumberRequest].
+    /// Gets the [MessageCode] for the [NoteImageRequest].
     pub const fn message_code(&self) -> MessageCode {
         MessageCode::Request(self.request_code())
     }
 
-    /// Gets the [RequestCode] for the [SerialNumberRequest].
+    /// Gets the [RequestCode] for the [NoteImageRequest].
     pub const fn request_code(&self) -> RequestCode {
-        RequestCode::SerialNumber
+        RequestCode::NoteDataInfo
     }
 
-    /// Gets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
+    /// Gets the [BlockNumber](ImageBlockNumber) for the [NoteImageRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
@@ -46,7 +46,7 @@ impl SerialNumberRequest {
         self.block_number
     }
 
-    /// Sets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
+    /// Sets the [BlockNumber](ImageBlockNumber) for the [NoteImageRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
@@ -54,7 +54,7 @@ impl SerialNumberRequest {
         self.block_number = val;
     }
 
-    /// Builder function that sets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
+    /// Builder function that sets the [BlockNumber](ImageBlockNumber) for the [NoteImageRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
@@ -63,26 +63,26 @@ impl SerialNumberRequest {
     }
 }
 
-impl Default for SerialNumberRequest {
+impl Default for NoteImageRequest {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<SerialNumberRequest> for Message {
-    fn from(val: SerialNumberRequest) -> Self {
+impl From<NoteImageRequest> for Message {
+    fn from(val: NoteImageRequest) -> Self {
         MessageData::from(val).into()
     }
 }
 
-impl From<&SerialNumberRequest> for Message {
-    fn from(val: &SerialNumberRequest) -> Self {
+impl From<&NoteImageRequest> for Message {
+    fn from(val: &NoteImageRequest) -> Self {
         (*val).into()
     }
 }
 
-impl From<SerialNumberRequest> for MessageData {
-    fn from(val: SerialNumberRequest) -> Self {
+impl From<NoteImageRequest> for MessageData {
+    fn from(val: NoteImageRequest) -> Self {
         Self::new()
             .with_message_type(val.message_type())
             .with_message_code(val.message_code())
@@ -90,13 +90,13 @@ impl From<SerialNumberRequest> for MessageData {
     }
 }
 
-impl From<&SerialNumberRequest> for MessageData {
-    fn from(val: &SerialNumberRequest) -> Self {
+impl From<&NoteImageRequest> for MessageData {
+    fn from(val: &NoteImageRequest) -> Self {
         (*val).into()
     }
 }
 
-impl TryFrom<&Message> for SerialNumberRequest {
+impl TryFrom<&Message> for NoteImageRequest {
     type Error = Error;
 
     fn try_from(val: &Message) -> Result<Self> {
@@ -104,7 +104,7 @@ impl TryFrom<&Message> for SerialNumberRequest {
     }
 }
 
-impl TryFrom<Message> for SerialNumberRequest {
+impl TryFrom<Message> for NoteImageRequest {
     type Error = Error;
 
     fn try_from(val: Message) -> Result<Self> {
@@ -112,13 +112,13 @@ impl TryFrom<Message> for SerialNumberRequest {
     }
 }
 
-impl TryFrom<&MessageData> for SerialNumberRequest {
+impl TryFrom<&MessageData> for NoteImageRequest {
     type Error = Error;
 
     fn try_from(val: &MessageData) -> Result<Self> {
         let (exp_type, exp_code) = (
             MessageType::Request(RequestType::Status),
-            MessageCode::Request(RequestCode::SerialNumber),
+            MessageCode::Request(RequestCode::NoteDataInfo),
         );
 
         match (val.message_type(), val.message_code()) {
@@ -138,7 +138,7 @@ impl TryFrom<&MessageData> for SerialNumberRequest {
     }
 }
 
-impl TryFrom<MessageData> for SerialNumberRequest {
+impl TryFrom<MessageData> for NoteImageRequest {
     type Error = Error;
 
     fn try_from(val: MessageData) -> Result<Self> {
@@ -152,9 +152,9 @@ mod tests {
     use crate::{EventCode, EventType};
 
     #[test]
-    fn test_serial_number_request() -> Result<()> {
+    fn test_note_image_request() -> Result<()> {
         let exp_type = MessageType::Request(RequestType::Status);
-        let exp_code = MessageCode::Request(RequestCode::SerialNumber);
+        let exp_code = MessageCode::Request(RequestCode::NoteDataInfo);
         let exp_num = ImageBlockNumber::new();
 
         let msg_data = MessageData::new()
@@ -163,7 +163,7 @@ mod tests {
             .with_additional(exp_num.into_bytes().as_ref());
         let msg = Message::new().with_data(msg_data);
 
-        let exp_req = SerialNumberRequest::new();
+        let exp_req = NoteImageRequest::new();
 
         assert_eq!(exp_req.message_type(), exp_type);
         assert_eq!(exp_type.request_type(), Ok(exp_req.request_type()));
@@ -174,13 +174,13 @@ mod tests {
         assert_eq!(exp_req.block_number(), exp_num);
 
         assert_eq!(Message::from(exp_req), msg);
-        assert_eq!(SerialNumberRequest::try_from(&msg), Ok(exp_req));
+        assert_eq!(NoteImageRequest::try_from(&msg), Ok(exp_req));
 
         Ok(())
     }
 
     #[test]
-    fn test_serial_number_request_invalid() -> Result<()> {
+    fn test_note_image_request_invalid() -> Result<()> {
         let invalid_types = [MessageType::Reserved]
             .into_iter()
             .chain((0x80..=0x8f).map(|m| MessageType::Event(EventType::from_u8(m))))
@@ -219,7 +219,7 @@ mod tests {
             RequestCode::Insert,
             RequestCode::ConditionalVend,
             RequestCode::Pause,
-            RequestCode::NoteDataInfo,
+            RequestCode::SerialNumber,
             RequestCode::RecyclerCollect,
             RequestCode::Reserved,
         ]
@@ -269,17 +269,16 @@ mod tests {
 
                 let inval_type = MessageData::new()
                     .with_message_type(msg_type)
-                    .with_message_code(SerialNumberRequest::new().message_code());
+                    .with_message_code(NoteImageRequest::new().message_code());
 
                 let inval_code = MessageData::new()
-                    .with_message_type(SerialNumberRequest::new().message_type())
+                    .with_message_type(NoteImageRequest::new().message_type())
                     .with_message_code(msg_code);
 
                 for stack_data in [inval_data, inval_type, inval_code] {
-                    assert!(SerialNumberRequest::try_from(&stack_data).is_err());
+                    assert!(NoteImageRequest::try_from(&stack_data).is_err());
                     assert!(
-                        SerialNumberRequest::try_from(Message::new().with_data(stack_data))
-                            .is_err()
+                        NoteImageRequest::try_from(Message::new().with_data(stack_data)).is_err()
                     );
                 }
             }
