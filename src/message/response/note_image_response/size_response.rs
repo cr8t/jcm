@@ -2,19 +2,19 @@ use std::fmt;
 
 use crate::{Error, ImageSize, Message, Response, ResponseCode, Result};
 
-/// Represents the [Response] to a `Serial Number Image Size` request [Message](crate::Message).
+/// Represents the [Response] to a `Note Image Data Size` request [Message](crate::Message).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct SerialNumberSizeResponse {
+pub struct NoteImageSizeResponse {
     code: ResponseCode,
     size_total: ImageSize,
 }
 
-impl SerialNumberSizeResponse {
-    /// Gets the byte length of the [SerialNumberSizeResponse].
+impl NoteImageSizeResponse {
+    /// Gets the byte length of the [NoteImageSizeResponse].
     pub const LEN: usize = ResponseCode::len() + ImageSize::LEN;
 
-    /// Creates a new [SerialNumberSizeResponse].
+    /// Creates a new [NoteImageSizeResponse].
     pub const fn new() -> Self {
         Self {
             code: ResponseCode::new(),
@@ -22,33 +22,33 @@ impl SerialNumberSizeResponse {
         }
     }
 
-    /// Gets the [ResponseCode] for the [SerialNumberSizeResponse].
+    /// Gets the [ResponseCode] for the [NoteImageSizeResponse].
     pub const fn code(&self) -> ResponseCode {
         self.code
     }
 
-    /// Sets the [ResponseCode] for the [SerialNumberSizeResponse].
+    /// Sets the [ResponseCode] for the [NoteImageSizeResponse].
     pub fn set_code(&mut self, code: ResponseCode) {
         self.code = code;
     }
 
-    /// Builder function that sets the [ResponseCode] for the [SerialNumberSizeResponse].
+    /// Builder function that sets the [ResponseCode] for the [NoteImageSizeResponse].
     pub fn with_code(mut self, code: ResponseCode) -> Self {
         self.set_code(code);
         self
     }
 
-    /// Gets the [SizeTotal](ImageSize) for the [SerialNumberSizeResponse].
+    /// Gets the [SizeTotal](ImageSize) for the [NoteImageSizeResponse].
     pub const fn size_total(&self) -> &ImageSize {
         &self.size_total
     }
 
-    /// Sets the UID for the [SerialNumberSizeResponse].
+    /// Sets the UID for the [NoteImageSizeResponse].
     pub fn set_size_total(&mut self, val: ImageSize) {
         self.size_total = val;
     }
 
-    /// Builder function that sets the UID for the [SerialNumberSizeResponse].
+    /// Builder function that sets the UID for the [NoteImageSizeResponse].
     pub const fn with_size_total(self, val: ImageSize) -> Self {
         Self {
             code: self.code,
@@ -61,17 +61,17 @@ impl SerialNumberSizeResponse {
         self.size_total.is_supported()
     }
 
-    /// Gets the length of the [SerialNumberSizeResponse].
+    /// Gets the length of the [NoteImageSizeResponse].
     pub const fn len(&self) -> usize {
         Self::LEN
     }
 
-    /// Gets whether the [SerialNumberSizeResponse] is empty.
+    /// Gets whether the [NoteImageSizeResponse] is empty.
     pub const fn is_empty(&self) -> bool {
         self.code.is_empty() && self.size_total.is_empty()
     }
 
-    /// Converts a [SerialNumberSizeResponse] into a byte buffer.
+    /// Converts a [NoteImageSizeResponse] into a byte buffer.
     pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
         let len = self.len();
         let buf_len = buf.len();
@@ -88,7 +88,7 @@ impl SerialNumberSizeResponse {
         }
     }
 
-    /// Converts a byte buffer into a [SerialNumberSizeResponse].
+    /// Converts a byte buffer into a [NoteImageSizeResponse].
     pub fn from_bytes(buf: &[u8]) -> Result<Self> {
         Ok(Self {
             code: buf
@@ -104,13 +104,13 @@ impl SerialNumberSizeResponse {
     }
 }
 
-impl Default for SerialNumberSizeResponse {
+impl Default for NoteImageSizeResponse {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TryFrom<&Response> for SerialNumberSizeResponse {
+impl TryFrom<&Response> for NoteImageSizeResponse {
     type Error = Error;
 
     fn try_from(val: &Response) -> Result<Self> {
@@ -121,7 +121,7 @@ impl TryFrom<&Response> for SerialNumberSizeResponse {
     }
 }
 
-impl TryFrom<Response> for SerialNumberSizeResponse {
+impl TryFrom<Response> for NoteImageSizeResponse {
     type Error = Error;
 
     fn try_from(val: Response) -> Result<Self> {
@@ -129,7 +129,7 @@ impl TryFrom<Response> for SerialNumberSizeResponse {
     }
 }
 
-impl TryFrom<&Message> for SerialNumberSizeResponse {
+impl TryFrom<&Message> for NoteImageSizeResponse {
     type Error = Error;
 
     fn try_from(val: &Message) -> Result<Self> {
@@ -137,7 +137,7 @@ impl TryFrom<&Message> for SerialNumberSizeResponse {
     }
 }
 
-impl TryFrom<Message> for SerialNumberSizeResponse {
+impl TryFrom<Message> for NoteImageSizeResponse {
     type Error = Error;
 
     fn try_from(val: Message) -> Result<Self> {
@@ -145,8 +145,8 @@ impl TryFrom<Message> for SerialNumberSizeResponse {
     }
 }
 
-impl From<SerialNumberSizeResponse> for Response {
-    fn from(val: SerialNumberSizeResponse) -> Self {
+impl From<NoteImageSizeResponse> for Response {
+    fn from(val: NoteImageSizeResponse) -> Self {
         Self {
             code: val.code,
             additional: val.size_total.into_bytes().into(),
@@ -154,13 +154,13 @@ impl From<SerialNumberSizeResponse> for Response {
     }
 }
 
-impl From<&SerialNumberSizeResponse> for Response {
-    fn from(val: &SerialNumberSizeResponse) -> Self {
+impl From<&NoteImageSizeResponse> for Response {
+    fn from(val: &NoteImageSizeResponse) -> Self {
         (*val).into()
     }
 }
 
-impl fmt::Display for SerialNumberSizeResponse {
+impl fmt::Display for NoteImageSizeResponse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
         write!(f, r#""code":{}, "#, self.code)?;
@@ -174,17 +174,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_serial_number_size_response() {
+    fn test_note_image_size_response() {
         let raw = [ResponseCode::Ack as u8, 0, 0, 0, 0, 0];
-        let exp = SerialNumberSizeResponse::new().with_code(ResponseCode::Ack);
+        let exp = NoteImageSizeResponse::new().with_code(ResponseCode::Ack);
         let exp_size_total = ImageSize::new();
         let res = Response::new()
             .with_code(ResponseCode::Ack)
             .with_additional(exp_size_total.into_bytes().as_ref());
-        let mut out = [0u8; SerialNumberSizeResponse::LEN];
+        let mut out = [0u8; NoteImageSizeResponse::LEN];
 
-        assert_eq!(SerialNumberSizeResponse::from_bytes(raw.as_ref()), Ok(exp));
-        assert_eq!(SerialNumberSizeResponse::try_from(&res), Ok(exp));
+        assert_eq!(NoteImageSizeResponse::from_bytes(raw.as_ref()), Ok(exp));
+        assert_eq!(NoteImageSizeResponse::try_from(&res), Ok(exp));
         assert_eq!(Response::from(&exp), res);
 
         assert!(exp.to_bytes(out.as_mut()).is_ok());
@@ -193,20 +193,19 @@ mod tests {
     }
 
     #[test]
-    fn test_serial_number_size_response_invalid() {
+    fn test_note_image_size_response_invalid() {
         let raw = [ResponseCode::Ack as u8, 0];
-        let exp = SerialNumberSizeResponse::new().with_code(ResponseCode::Ack);
-        let mut out = [0u8; SerialNumberSizeResponse::LEN];
+        let exp = NoteImageSizeResponse::new().with_code(ResponseCode::Ack);
+        let mut out = [0u8; NoteImageSizeResponse::LEN];
 
-        assert!(SerialNumberSizeResponse::from_bytes(raw[..1].as_ref()).is_err());
+        assert!(NoteImageSizeResponse::from_bytes(raw[..1].as_ref()).is_err());
         assert!(
-            SerialNumberSizeResponse::from_bytes([ResponseCode::Reserved as u8, 0].as_ref())
-                .is_err()
+            NoteImageSizeResponse::from_bytes([ResponseCode::Reserved as u8, 0].as_ref()).is_err()
         );
         assert!(exp.to_bytes(out[..1].as_mut()).is_err());
         assert!(exp.to_bytes(&mut []).is_err());
-        assert!(SerialNumberSizeResponse::try_from(Response::new().with_additional(&[])).is_err());
-        assert!(SerialNumberSizeResponse::try_from(
+        assert!(NoteImageSizeResponse::try_from(Response::new().with_additional(&[])).is_err());
+        assert!(NoteImageSizeResponse::try_from(
             Response::new()
                 .with_code(ResponseCode::Ack)
                 .with_additional(&[])

@@ -278,8 +278,7 @@ mod tests {
                 for stack_data in [inval_data, inval_type, inval_code] {
                     assert!(NoteImageRequest::try_from(&stack_data).is_err());
                     assert!(
-                        NoteImageRequest::try_from(Message::new().with_data(stack_data))
-                            .is_err()
+                        NoteImageRequest::try_from(Message::new().with_data(stack_data)).is_err()
                     );
                 }
             }

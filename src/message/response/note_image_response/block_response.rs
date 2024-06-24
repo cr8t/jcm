@@ -2,16 +2,16 @@ use std::fmt;
 
 use crate::{Error, ImageBlock, Message, Response, ResponseCode, Result};
 
-/// Represents the [Response] to a `Serial Number Image Block` request [Message](crate::Message).
+/// Represents the [Response] to a `Note Image Data Block` request [Message](crate::Message).
 #[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SerialNumberBlockResponse {
+pub struct NoteImageBlockResponse {
     code: ResponseCode,
     block: ImageBlock,
 }
 
-impl SerialNumberBlockResponse {
-    /// Creates a new [SerialNumberBlockResponse].
+impl NoteImageBlockResponse {
+    /// Creates a new [NoteImageBlockResponse].
     pub const fn new() -> Self {
         Self {
             code: ResponseCode::new(),
@@ -19,33 +19,33 @@ impl SerialNumberBlockResponse {
         }
     }
 
-    /// Gets the [ResponseCode] for the [SerialNumberBlockResponse].
+    /// Gets the [ResponseCode] for the [NoteImageBlockResponse].
     pub const fn code(&self) -> ResponseCode {
         self.code
     }
 
-    /// Sets the [ResponseCode] for the [SerialNumberBlockResponse].
+    /// Sets the [ResponseCode] for the [NoteImageBlockResponse].
     pub fn set_code(&mut self, code: ResponseCode) {
         self.code = code;
     }
 
-    /// Builder function that sets the [ResponseCode] for the [SerialNumberBlockResponse].
+    /// Builder function that sets the [ResponseCode] for the [NoteImageBlockResponse].
     pub fn with_code(mut self, code: ResponseCode) -> Self {
         self.set_code(code);
         self
     }
 
-    /// Gets the [Block](ImageBlock) for the [SerialNumberBlockResponse].
+    /// Gets the [Block](ImageBlock) for the [NoteImageBlockResponse].
     pub const fn block(&self) -> &ImageBlock {
         &self.block
     }
 
-    /// Sets the UID for the [SerialNumberBlockResponse].
+    /// Sets the UID for the [NoteImageBlockResponse].
     pub fn set_block(&mut self, val: ImageBlock) {
         self.block = val;
     }
 
-    /// Builder function that sets the UID for the [SerialNumberBlockResponse].
+    /// Builder function that sets the UID for the [NoteImageBlockResponse].
     pub fn with_block(self, val: ImageBlock) -> Self {
         Self {
             code: self.code,
@@ -53,17 +53,17 @@ impl SerialNumberBlockResponse {
         }
     }
 
-    /// Gets the length of the [SerialNumberBlockResponse].
+    /// Gets the length of the [NoteImageBlockResponse].
     pub fn len(&self) -> usize {
         ResponseCode::len().saturating_add(self.block.len())
     }
 
-    /// Gets whether the [SerialNumberBlockResponse] is empty.
+    /// Gets whether the [NoteImageBlockResponse] is empty.
     pub fn is_empty(&self) -> bool {
         self.code.is_empty() && self.block.is_empty()
     }
 
-    /// Converts a [SerialNumberBlockResponse] into a byte buffer.
+    /// Converts a [NoteImageBlockResponse] into a byte buffer.
     pub fn to_bytes(&self, buf: &mut [u8]) -> Result<()> {
         let len = self.len();
         let buf_len = buf.len();
@@ -84,7 +84,7 @@ impl SerialNumberBlockResponse {
         }
     }
 
-    /// Converts a byte buffer into a [SerialNumberBlockResponse].
+    /// Converts a byte buffer into a [NoteImageBlockResponse].
     pub fn from_bytes(buf: &[u8]) -> Result<Self> {
         Ok(Self {
             code: buf
@@ -97,13 +97,13 @@ impl SerialNumberBlockResponse {
     }
 }
 
-impl Default for SerialNumberBlockResponse {
+impl Default for NoteImageBlockResponse {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TryFrom<&Response> for SerialNumberBlockResponse {
+impl TryFrom<&Response> for NoteImageBlockResponse {
     type Error = Error;
 
     fn try_from(val: &Response) -> Result<Self> {
@@ -114,7 +114,7 @@ impl TryFrom<&Response> for SerialNumberBlockResponse {
     }
 }
 
-impl TryFrom<Response> for SerialNumberBlockResponse {
+impl TryFrom<Response> for NoteImageBlockResponse {
     type Error = Error;
 
     fn try_from(val: Response) -> Result<Self> {
@@ -122,7 +122,7 @@ impl TryFrom<Response> for SerialNumberBlockResponse {
     }
 }
 
-impl TryFrom<&Message> for SerialNumberBlockResponse {
+impl TryFrom<&Message> for NoteImageBlockResponse {
     type Error = Error;
 
     fn try_from(val: &Message) -> Result<Self> {
@@ -130,7 +130,7 @@ impl TryFrom<&Message> for SerialNumberBlockResponse {
     }
 }
 
-impl TryFrom<Message> for SerialNumberBlockResponse {
+impl TryFrom<Message> for NoteImageBlockResponse {
     type Error = Error;
 
     fn try_from(val: Message) -> Result<Self> {
@@ -138,8 +138,8 @@ impl TryFrom<Message> for SerialNumberBlockResponse {
     }
 }
 
-impl From<SerialNumberBlockResponse> for Response {
-    fn from(val: SerialNumberBlockResponse) -> Self {
+impl From<NoteImageBlockResponse> for Response {
+    fn from(val: NoteImageBlockResponse) -> Self {
         Self {
             code: val.code,
             additional: val.block.into(),
@@ -147,13 +147,13 @@ impl From<SerialNumberBlockResponse> for Response {
     }
 }
 
-impl From<&SerialNumberBlockResponse> for Response {
-    fn from(val: &SerialNumberBlockResponse) -> Self {
+impl From<&NoteImageBlockResponse> for Response {
+    fn from(val: &NoteImageBlockResponse) -> Self {
         val.clone().into()
     }
 }
 
-impl fmt::Display for SerialNumberBlockResponse {
+impl fmt::Display for NoteImageBlockResponse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
         write!(f, r#""code":{}, "#, self.code)?;
@@ -167,12 +167,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_serial_number_block_response() {
+    fn test_note_image_block_response() {
         let raw: Vec<u8> = [ResponseCode::Ack as u8]
             .into_iter()
             .chain([0; 128])
             .collect();
-        let exp = SerialNumberBlockResponse::new()
+        let exp = NoteImageBlockResponse::new()
             .with_code(ResponseCode::Ack)
             .with_block(raw[1..].into());
         let exp_block = ImageBlock::create(raw[1..].into());
@@ -185,20 +185,20 @@ mod tests {
         assert_eq!(&out, raw.as_slice());
 
         assert_eq!(
-            SerialNumberBlockResponse::from_bytes(raw.as_ref()),
+            NoteImageBlockResponse::from_bytes(raw.as_ref()),
             Ok(exp.clone())
         );
 
         assert_eq!(Response::from(&exp), res);
-        assert_eq!(SerialNumberBlockResponse::try_from(&res), Ok(exp));
+        assert_eq!(NoteImageBlockResponse::try_from(&res), Ok(exp));
     }
 
     #[test]
-    fn test_serial_number_block_response_invalid() {
+    fn test_note_image_block_response_invalid() {
         (0..=u8::MAX)
             .filter(|&c| ResponseCode::try_from(c).is_err())
             .for_each(|invalid| {
-                assert!(SerialNumberBlockResponse::from_bytes(&[invalid]).is_err());
+                assert!(NoteImageBlockResponse::from_bytes(&[invalid]).is_err());
             });
     }
 }
