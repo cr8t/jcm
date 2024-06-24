@@ -1,13 +1,13 @@
 use std::fmt;
 
-use crate::{Error, Message, Response, ResponseCode, Result, SerialNumberBlock};
+use crate::{Error, ImageBlock, Message, Response, ResponseCode, Result};
 
 /// Represents the [Response] to a UID request [Message](crate::Message).
 #[repr(C)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SerialNumberBlockResponse {
     code: ResponseCode,
-    block: SerialNumberBlock,
+    block: ImageBlock,
 }
 
 impl SerialNumberBlockResponse {
@@ -15,7 +15,7 @@ impl SerialNumberBlockResponse {
     pub const fn new() -> Self {
         Self {
             code: ResponseCode::new(),
-            block: SerialNumberBlock::new(),
+            block: ImageBlock::new(),
         }
     }
 
@@ -35,18 +35,18 @@ impl SerialNumberBlockResponse {
         self
     }
 
-    /// Gets the [Block](SerialNumberBlock) for the [SerialNumberBlockResponse].
-    pub const fn block(&self) -> &SerialNumberBlock {
+    /// Gets the [Block](ImageBlock) for the [SerialNumberBlockResponse].
+    pub const fn block(&self) -> &ImageBlock {
         &self.block
     }
 
     /// Sets the UID for the [SerialNumberBlockResponse].
-    pub fn set_block(&mut self, val: SerialNumberBlock) {
+    pub fn set_block(&mut self, val: ImageBlock) {
         self.block = val;
     }
 
     /// Builder function that sets the UID for the [SerialNumberBlockResponse].
-    pub fn with_block(self, val: SerialNumberBlock) -> Self {
+    pub fn with_block(self, val: ImageBlock) -> Self {
         Self {
             code: self.code,
             block: val,
@@ -92,10 +92,7 @@ impl SerialNumberBlockResponse {
                 .copied()
                 .ok_or(Error::InvalidResponseLen((buf.len(), 1)))?
                 .try_into()?,
-            block: buf
-                .get(1..)
-                .map(SerialNumberBlock::from)
-                .unwrap_or_default(),
+            block: buf.get(1..).map(ImageBlock::from).unwrap_or_default(),
         })
     }
 }
@@ -178,7 +175,7 @@ mod tests {
         let exp = SerialNumberBlockResponse::new()
             .with_code(ResponseCode::Ack)
             .with_block(raw[1..].into());
-        let exp_block = SerialNumberBlock::create(raw[1..].into());
+        let exp_block = ImageBlock::create(raw[1..].into());
         let res = Response::new()
             .with_code(ResponseCode::Ack)
             .with_additional(exp_block.block());

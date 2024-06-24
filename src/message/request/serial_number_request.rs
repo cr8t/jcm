@@ -1,20 +1,20 @@
 use crate::{
-    Error, Message, MessageCode, MessageData, MessageType, RequestCode, RequestType, Result,
-    SerialNumberBlockNumber,
+    Error, ImageBlockNumber, Message, MessageCode, MessageData, MessageType, RequestCode,
+    RequestType, Result,
 };
 
 /// Represents a `Serial Number Image` request message.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SerialNumberRequest {
-    block_number: SerialNumberBlockNumber,
+    block_number: ImageBlockNumber,
 }
 
 impl SerialNumberRequest {
     /// Creates a new [SerialNumberRequest].
     pub const fn new() -> Self {
         Self {
-            block_number: SerialNumberBlockNumber::new(),
+            block_number: ImageBlockNumber::new(),
         }
     }
 
@@ -38,27 +38,27 @@ impl SerialNumberRequest {
         RequestCode::SerialNumber
     }
 
-    /// Gets the [BlockNumber](SerialNumberBlockNumber) for the [SerialNumberRequest].
+    /// Gets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
-    pub const fn block_number(&self) -> SerialNumberBlockNumber {
+    pub const fn block_number(&self) -> ImageBlockNumber {
         self.block_number
     }
 
-    /// Sets the [BlockNumber](SerialNumberBlockNumber) for the [SerialNumberRequest].
+    /// Sets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
-    pub fn set_block_number(&mut self, val: SerialNumberBlockNumber) {
+    pub fn set_block_number(&mut self, val: ImageBlockNumber) {
         self.block_number = val;
     }
 
-    /// Builder function that sets the [BlockNumber](SerialNumberBlockNumber) for the [SerialNumberRequest].
+    /// Builder function that sets the [BlockNumber](ImageBlockNumber) for the [SerialNumberRequest].
     ///
     /// **NOTE**: block number `00h` is used to request the size and total number of blocks from
     /// the device.
-    pub const fn with_block_number(self, val: SerialNumberBlockNumber) -> Self {
+    pub const fn with_block_number(self, val: ImageBlockNumber) -> Self {
         Self { block_number: val }
     }
 }
@@ -127,10 +127,7 @@ impl TryFrom<&MessageData> for SerialNumberRequest {
                     .additional()
                     .first()
                     .copied()
-                    .ok_or(Error::InvalidMessageDataLen((
-                        0,
-                        SerialNumberBlockNumber::LEN,
-                    )))?
+                    .ok_or(Error::InvalidMessageDataLen((0, ImageBlockNumber::LEN)))?
                     .into(),
             }),
             (msg_type, msg_code) => Err(Error::InvalidMessage((
@@ -158,7 +155,7 @@ mod tests {
     fn test_status_request() -> Result<()> {
         let exp_type = MessageType::Request(RequestType::Status);
         let exp_code = MessageCode::Request(RequestCode::SerialNumber);
-        let exp_num = SerialNumberBlockNumber::new();
+        let exp_num = ImageBlockNumber::new();
 
         let msg_data = MessageData::new()
             .with_message_type(exp_type)

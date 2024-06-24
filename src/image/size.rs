@@ -2,38 +2,37 @@ use core::fmt;
 
 use crate::{Error, Result};
 
-/// Represents the image size and total block number of the Serial Number Image.
+/// Represents the image size and total block number of a Serial Number and/or Note Image.
 ///
-/// The initial `SerialNumberRequest` returns the total image size and number of blocks.
+/// The initial request returns the total image size and number of blocks.
 ///
-/// If the size and total are both zero, the device does not support sending the Serial Number
-/// Image.
+/// If the size and total are both zero, the device does not support sending the image data.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct SerialNumberSize {
+pub struct ImageSize {
     size: u32,
     total: u8,
 }
 
-impl SerialNumberSize {
+impl ImageSize {
     const SIZE_LEN: usize = 4;
     const TOTAL_LEN: usize = 1;
     const UNSUPPORTED: u8 = 0;
 
-    /// Represents the total byte length of the [SerialNumberSize].
+    /// Represents the total byte length of the [ImageSize].
     pub const LEN: usize = Self::SIZE_LEN + Self::TOTAL_LEN;
 
-    /// Creates a new [SerialNumberSize].
+    /// Creates a new [ImageSize].
     pub const fn new() -> Self {
         Self { size: 0, total: 0 }
     }
 
-    /// Gets the byte length of the [SerialNumberSize].
+    /// Gets the byte length of the [ImageSize].
     pub const fn len(&self) -> usize {
         Self::LEN
     }
 
-    /// Gets whether the [SerialNumberSize] is empty.
+    /// Gets whether the [ImageSize] is empty.
     pub const fn is_empty(&self) -> bool {
         self.size == Self::UNSUPPORTED as u32 && self.total == Self::UNSUPPORTED
     }
@@ -91,31 +90,31 @@ impl SerialNumberSize {
         }
     }
 
-    /// Converts a byte buffer into a [SerialNumberSize].
+    /// Converts a byte buffer into a [ImageSize].
     pub const fn from_bytes(buf: &[u8]) -> Result<Self> {
         match buf.len() {
             Self::LEN => Ok(Self {
                 size: u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]),
                 total: buf[4],
             }),
-            len => Err(Error::InvalidSerialNumberSizeLen((len, Self::LEN))),
+            len => Err(Error::InvalidImageSizeLen((len, Self::LEN))),
         }
     }
 
-    /// Converts a [SerialNumberSize] into a byte array.
+    /// Converts a [ImageSize] into a byte array.
     pub const fn into_bytes(self) -> [u8; Self::LEN] {
         let size = self.size.to_le_bytes();
         [size[0], size[1], size[2], size[3], self.total]
     }
 }
 
-impl Default for SerialNumberSize {
+impl Default for ImageSize {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TryFrom<&[u8]> for SerialNumberSize {
+impl TryFrom<&[u8]> for ImageSize {
     type Error = Error;
 
     fn try_from(val: &[u8]) -> Result<Self> {
@@ -123,7 +122,7 @@ impl TryFrom<&[u8]> for SerialNumberSize {
     }
 }
 
-impl<const N: usize> TryFrom<&[u8; N]> for SerialNumberSize {
+impl<const N: usize> TryFrom<&[u8; N]> for ImageSize {
     type Error = Error;
 
     fn try_from(val: &[u8; N]) -> Result<Self> {
@@ -131,7 +130,7 @@ impl<const N: usize> TryFrom<&[u8; N]> for SerialNumberSize {
     }
 }
 
-impl<const N: usize> TryFrom<[u8; N]> for SerialNumberSize {
+impl<const N: usize> TryFrom<[u8; N]> for ImageSize {
     type Error = Error;
 
     fn try_from(val: [u8; N]) -> Result<Self> {
@@ -139,13 +138,13 @@ impl<const N: usize> TryFrom<[u8; N]> for SerialNumberSize {
     }
 }
 
-impl From<SerialNumberSize> for [u8; SerialNumberSize::LEN] {
-    fn from(val: SerialNumberSize) -> Self {
+impl From<ImageSize> for [u8; ImageSize::LEN] {
+    fn from(val: ImageSize) -> Self {
         val.into_bytes()
     }
 }
 
-impl IntoIterator for SerialNumberSize {
+impl IntoIterator for ImageSize {
     type Item = u8;
     type IntoIter = std::array::IntoIter<u8, { Self::LEN }>;
 
@@ -154,7 +153,7 @@ impl IntoIterator for SerialNumberSize {
     }
 }
 
-impl fmt::Display for SerialNumberSize {
+impl fmt::Display for ImageSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{")?;
         write!(f, r#""size": {}, "#, self.size)?;
@@ -169,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_size_total() {
-        let size_total = SerialNumberSize::new();
+        let size_total = ImageSize::new();
 
         assert!(size_total.is_empty());
         assert!(!size_total.is_supported());
@@ -178,12 +177,10 @@ mod tests {
         assert_eq!(size_total.total_blocks(), 0);
 
         let raw = [1, 2, 3, 4, 5];
-        let exp = SerialNumberSize::new()
-            .with_size(0x04030201)
-            .with_total_blocks(5);
+        let exp = ImageSize::new().with_size(0x04030201).with_total_blocks(5);
 
-        assert_eq!(SerialNumberSize::from_bytes(raw.as_ref()), Ok(exp));
-        assert_eq!(SerialNumberSize::try_from(raw.as_ref()), Ok(exp));
+        assert_eq!(ImageSize::from_bytes(raw.as_ref()), Ok(exp));
+        assert_eq!(ImageSize::try_from(raw.as_ref()), Ok(exp));
         assert_eq!(exp.size(), 0x04030201);
         assert_eq!(exp.total_blocks(), 5);
     }
@@ -191,21 +188,15 @@ mod tests {
     #[test]
     fn test_size_total_invalid() {
         (0..=u8::MAX as usize)
-            .filter(|l| l != &SerialNumberSize::LEN)
+            .filter(|l| l != &ImageSize::LEN)
             .for_each(|len| {
                 assert_eq!(
-                    SerialNumberSize::from_bytes(vec![0u8; len].as_ref()),
-                    Err(Error::InvalidSerialNumberSizeLen((
-                        len,
-                        SerialNumberSize::LEN
-                    )))
+                    ImageSize::from_bytes(vec![0u8; len].as_ref()),
+                    Err(Error::InvalidImageSizeLen((len, ImageSize::LEN)))
                 );
                 assert_eq!(
-                    SerialNumberSize::try_from(vec![0u8; len].as_slice()),
-                    Err(Error::InvalidSerialNumberSizeLen((
-                        len,
-                        SerialNumberSize::LEN
-                    )))
+                    ImageSize::try_from(vec![0u8; len].as_slice()),
+                    Err(Error::InvalidImageSizeLen((len, ImageSize::LEN)))
                 );
             });
     }

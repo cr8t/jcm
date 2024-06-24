@@ -1,24 +1,24 @@
 use std::fmt;
 
-use crate::{Error, Message, Response, ResponseCode, Result, SerialNumberSize};
+use crate::{Error, ImageSize, Message, Response, ResponseCode, Result};
 
 /// Represents the [Response] to a UID request [Message](crate::Message).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SerialNumberSizeResponse {
     code: ResponseCode,
-    size_total: SerialNumberSize,
+    size_total: ImageSize,
 }
 
 impl SerialNumberSizeResponse {
     /// Gets the byte length of the [SerialNumberSizeResponse].
-    pub const LEN: usize = ResponseCode::len() + SerialNumberSize::LEN;
+    pub const LEN: usize = ResponseCode::len() + ImageSize::LEN;
 
     /// Creates a new [SerialNumberSizeResponse].
     pub const fn new() -> Self {
         Self {
             code: ResponseCode::new(),
-            size_total: SerialNumberSize::new(),
+            size_total: ImageSize::new(),
         }
     }
 
@@ -38,18 +38,18 @@ impl SerialNumberSizeResponse {
         self
     }
 
-    /// Gets the [SizeTotal](SerialNumberSize) for the [SerialNumberSizeResponse].
-    pub const fn size_total(&self) -> &SerialNumberSize {
+    /// Gets the [SizeTotal](ImageSize) for the [SerialNumberSizeResponse].
+    pub const fn size_total(&self) -> &ImageSize {
         &self.size_total
     }
 
     /// Sets the UID for the [SerialNumberSizeResponse].
-    pub fn set_size_total(&mut self, val: SerialNumberSize) {
+    pub fn set_size_total(&mut self, val: ImageSize) {
         self.size_total = val;
     }
 
     /// Builder function that sets the UID for the [SerialNumberSizeResponse].
-    pub const fn with_size_total(self, val: SerialNumberSize) -> Self {
+    pub const fn with_size_total(self, val: ImageSize) -> Self {
         Self {
             code: self.code,
             size_total: val,
@@ -177,7 +177,7 @@ mod tests {
     fn test_serial_number_size_total_response() {
         let raw = [ResponseCode::Ack as u8, 0, 0, 0, 0, 0];
         let exp = SerialNumberSizeResponse::new().with_code(ResponseCode::Ack);
-        let exp_size_total = SerialNumberSize::new();
+        let exp_size_total = ImageSize::new();
         let res = Response::new()
             .with_code(ResponseCode::Ack)
             .with_additional(exp_size_total.into_bytes().as_ref());

@@ -576,9 +576,7 @@ fn test_serial_number() -> Result<()> {
     log::info!("Serial Number Size response: {res}");
 
     if res.is_supported() {
-        for block in
-            (1..res.size_total().total_blocks() as u8).map(jcm::SerialNumberBlockNumber::from)
-        {
+        for block in (1..res.size_total().total_blocks() as u8).map(jcm::ImageBlockNumber::from) {
             let req: jcm::Message =
                 jcm::MessageData::from(jcm::SerialNumberRequest::new().with_block_number(block))
                     .with_uid(1)
