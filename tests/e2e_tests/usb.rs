@@ -556,13 +556,24 @@ fn test_serial_number() -> Result<()> {
 
     ack_event_responder(Arc::clone(&stop), event_recv, event_res_send)?;
 
+    common_startup(&usb, &response_recv)?;
+
+    thread::sleep(time::Duration::from_millis(5000));
+
+    let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
+        .with_uid(1)
+        .into();
+    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
+
+    log::info!("Idle response: {res}");
+
     let req: jcm::Message = jcm::MessageData::from(jcm::SerialNumberRequest::new())
         .with_uid(1)
         .into();
-    let res: jcm::SerialNumberSizeTotalResponse =
+    let res: jcm::SerialNumberSizeResponse =
         jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?.try_into()?;
 
-    log::info!("Serial Number Size/Total response: {res}");
+    log::info!("Serial Number Size response: {res}");
 
     if res.is_supported() {
         for block in
@@ -579,17 +590,6 @@ fn test_serial_number() -> Result<()> {
             log::info!("Serial Number block[{block}] response: {res}");
         }
     }
-
-    common_startup(&usb, &response_recv)?;
-
-    thread::sleep(time::Duration::from_millis(5000));
-
-    let req: jcm::Message = jcm::MessageData::from(jcm::IdleRequest::new())
-        .with_uid(1)
-        .into();
-    let res = jcm::usb::poll_request(Arc::clone(&usb), &req, &response_recv, 3)?;
-
-    log::info!("Idle response: {res}");
 
     stop.store(true, Ordering::SeqCst);
 
