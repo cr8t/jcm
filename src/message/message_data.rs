@@ -121,6 +121,17 @@ impl MessageData {
         self
     }
 
+    /// Sets the additional data of the [MessageData] in-place.
+    pub fn emplace_additional(self, additional: Vec<u8>) -> Self {
+        Self {
+            conf_id: self.conf_id,
+            uid: self.uid,
+            message_type: self.message_type,
+            message_code: self.message_code,
+            additional,
+        }
+    }
+
     /// Gets the length of the [MessageData].
     pub fn len(&self) -> usize {
         Self::meta_len() + self.additional.len()
