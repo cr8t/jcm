@@ -56,6 +56,10 @@ pub enum Error {
     InvalidAsciiString,
     InvalidUtf8String,
     InvalidFirmwareVersion,
+    InvalidValue {
+        field: &'static str,
+        value: usize,
+    },
     #[cfg(feature = "usb")]
     Usb(String),
 }
@@ -223,6 +227,9 @@ impl fmt::Display for Error {
             Self::InvalidCString => write!(f, "invalid null-terminated C string"),
             Self::InvalidUtf8String => write!(f, "invalid UTF-8 encoded string"),
             Self::InvalidFirmwareVersion => write!(f, "invalid firmware version"),
+            Self::InvalidValue { field, value } => {
+                write!(f, "invalid {field} value: {value}")
+            }
             #[cfg(feature = "usb")]
             Self::Usb(err) => write!(f, "USB error: {err}"),
         }
