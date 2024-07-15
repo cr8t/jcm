@@ -2,6 +2,7 @@ use std::fmt;
 
 use crate::{Error, Message, Result};
 
+mod cash_box_size_response;
 mod currency_assign_response;
 mod denomination_disable_response;
 mod direction_disable_response;
@@ -16,6 +17,7 @@ mod status_response;
 mod uid_response;
 mod version_response;
 
+pub use cash_box_size_response::*;
 pub use currency_assign_response::*;
 pub use denomination_disable_response::*;
 pub use direction_disable_response::*;
