@@ -1,4 +1,5 @@
 mod bill_acceptor_state;
+mod cash_box_size;
 mod currency;
 mod denomination;
 mod device_status;
@@ -19,6 +20,7 @@ mod unit_status;
 pub mod usb;
 
 pub use bill_acceptor_state::*;
+pub use cash_box_size::*;
 pub use currency::*;
 pub use denomination::*;
 pub use device_status::*;

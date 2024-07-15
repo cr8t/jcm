@@ -6,6 +6,7 @@ use crate::{
     Error, Message, MessageCode, MessageData, MessageType, RequestCode, RequestType, Result,
 };
 
+mod cash_box_size_request;
 mod collect_request;
 mod currency_assign_request;
 mod denomination_disable_request;
@@ -27,6 +28,7 @@ mod status_request;
 mod uid_request;
 mod version_request;
 
+pub use cash_box_size_request::*;
 pub use collect_request::*;
 pub use currency_assign_request::*;
 pub use denomination_disable_request::*;
